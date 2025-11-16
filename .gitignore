@@ -1,0 +1,92 @@
+############################################################
+# SpanForge Repository Git Ignore Configuration
+# Keeps source, configs, small examples & docs; excludes raw,
+# generated, secret, bulky, and licensed data artifacts.
+############################################################
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+*.conda
+
+# Jupyter temporary/checkpoints
+.ipynb_checkpoints/
+*.ipynb~
+*.nbconvert.ipynb
+
+# Logs & temp
+*.log
+logs/
+tmp/
+temp/
+
+# Secrets / environment files
+.env
+*.env
+.env.*
+
+# Caches (HF / tooling)
+.cache/
+huggingface/
+hf_cache/
+*.cache
+
+# Raw & generated data (retain only curated subsets)
+data/raw/
+data/meddra/
+data/synonyms/
+data/output/
+data/annotation/raw/
+data/annotation/exports/
+data/annotation/reports/
+data/annotation/conflicts/
+data/annotation/tmp/
+
+# Allowlisted data artifacts
+!data/lexicon/
+!data/annotation/registry.csv
+!data/annotation/config/
+!data/examples/
+
+# Model artifacts / checkpoints
+models/
+checkpoints/
+*.bin
+*.pt
+*.ckpt
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Build / distribution outputs
+dist/
+build/
+*.egg
+MANIFEST
+
+# Node / JS (if later added)
+node_modules/
+package-lock.json
+
+# Coverage / test output
+.coverage
+coverage.xml
+htmlcov/
+
+# Misc
+*.bak
+*.swp
+*.orig
