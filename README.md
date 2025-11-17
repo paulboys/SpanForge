@@ -1,18 +1,15 @@
 <div align="center">
 
+<!-- Brand block: single visual logo + tagline (avoid duplicate title) -->
 ![SpanForge Logo Light](docs/assets/SpanForge-light.svg#gh-light-mode-only)
 ![SpanForge Logo Dark](docs/assets/SpanForge-dark.svg#gh-dark-mode-only)
 
-<h1>SpanForge</h1>
-<p><em>From noisy complaints to canonical adverse event spans.</em></p>
-<p>
-  <strong>Adverse Event NER Workflow</strong><br/>
-  BioBERT + Weak Labeling + Human Annotation + Provenance Quality
-</p>
-<hr style="width:60%;border:0;border-top:1px solid #ccc" />
+<p><em>From noisy complaints to canonical adverse event spans.</em><br/>
+<strong>BioBERT · Weak Labeling · Human Annotation · Provenance Quality</strong></p>
+<hr style="width:58%;border:0;border-top:1px solid #d0d0d0;margin-top:12px" />
 </div>
 
-End-to-end workflow for extracting symptom-like adverse events and product mentions from consumer complaints using BioBERT plus lexicon/fuzzy heuristics, human curation in Label Studio, and provenance/quality reporting.
+SpanForge is an end-to-end workflow for extracting symptom-like adverse events and product mentions from consumer complaints using BioBERT plus lexicon/fuzzy heuristics, human curation in Label Studio, and provenance/quality reporting.
 
 <details>
 <summary><strong>Table of Contents</strong></summary>
