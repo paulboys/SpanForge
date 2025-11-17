@@ -1,6 +1,6 @@
 <div align="center">
 
-![SpanForge Logo Light](docs/assets/SpanForge.png#gh-light-mode-only)
+![SpanForge Logo Light](docs/assets/SpanForge-light.svg#gh-light-mode-only)
 ![SpanForge Logo Dark](docs/assets/SpanForge-dark.svg#gh-dark-mode-only)
 
 <h1>SpanForge</h1>
@@ -200,6 +200,8 @@ See: `docs/overview.md`, `docs/annotation_guide.md`, `docs/tutorial_labeling.md`
 
 ---
 For a hands-on walkthrough open `scripts/Workbook.ipynb`.
+
+Light PNG (large, optional): [download](docs/assets/SpanForge.png)
 
 ## Public Landing Page
 GitHub Pages (enable in repository settings → Pages → Source: `docs/` folder):
