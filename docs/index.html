@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="SpanForge: Open adverse event NER workflow from noisy complaints to canonical spans." />
+  <title>SpanForge • Adverse Event NER</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #172026;
+      --sub: #374957;
+      --accent1: #0B6E99;
+      --accent2: #E04F8A;
+      --accent3: #F5A300;
+      --border: #E2E6EA;
+      --code-bg: #f5f8fa;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121619;
+        --text: #F5F8FA;
+        --sub: #C4CDD6;
+        --border: #1F2529;
+        --code-bg: #1F2529;
+      }
+    }
+    [data-theme="dark"] {
+      --bg: #121619;
+      --text: #F5F8FA;
+      --sub: #C4CDD6;
+      --border: #1F2529;
+      --code-bg: #1F2529;
+    }
+    [data-theme="light"] {
+      --bg: #ffffff;
+      --text: #172026;
+      --sub: #374957;
+      --border: #E2E6EA;
+      --code-bg: #f5f8fa;
+    }
+    body {
+      margin: 0; font-family: system-ui,-apple-system,Segoe UI,Arial,sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased;
+    }
+    header { max-width: 940px; margin: 0 auto; padding: 48px 24px 16px; text-align: center; }
+    header img.logo { width: 240px; height: auto; display: block; margin: 0 auto 8px; }
+    h1 { font-size: 48px; margin: 12px 0 8px; letter-spacing: .5px; }
+    .tagline { font-size: 18px; color: var(--sub); margin-bottom: 28px; }
+    main { max-width: 940px; margin: 0 auto; padding: 0 24px 64px; }
+    section { margin-bottom: 48px; }
+    section h2 { font-size: 24px; margin: 0 0 12px; }
+    p, li { line-height: 1.55; }
+    .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); }
+    .card { border: 1px solid var(--border); border-radius: 10px; padding: 18px 18px 14px; background: linear-gradient(145deg,var(--bg),var(--code-bg)); }
+    .card h3 { margin: 0 0 8px; font-size: 18px; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace; background: var(--code-bg); padding: 2px 6px; border-radius: 6px; }
+    pre { padding: 12px 16px; overflow-x: auto; }
+    a { color: var(--accent1); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .5px; background: var(--accent1); color: #fff; margin-right: 6px; }
+    .features-list li { margin-bottom: 6px; }
+    footer { text-align: center; padding: 32px 24px 56px; font-size: 13px; color: var(--sub); }
+    .toggle { position: fixed; top: 16px; right: 16px; background: var(--code-bg); border: 1px solid var(--border); padding: 8px 12px; font-size: 13px; border-radius: 8px; cursor: pointer; }
+    .logo-dark { display: none; }
+    @media (prefers-color-scheme: dark) {
+      .logo-light { display: none; }
+      .logo-dark { display: block; }
+    }
+    [data-theme="dark"] .logo-light { display: none !important; }
+    [data-theme="dark"] .logo-dark { display: block !important; }
+    [data-theme="light"] .logo-light { display: block !important; }
+    [data-theme="light"] .logo-dark { display: none !important; }
+  </style>
+  <script>
+    function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('spanforge-theme',t);} 
+    function toggleTheme(){const cur=document.documentElement.getAttribute('data-theme');setTheme(cur==='dark'?'light':'dark');}
+    document.addEventListener('DOMContentLoaded',()=>{const saved=localStorage.getItem('spanforge-theme');if(saved){setTheme(saved);} });
+  </script>
+</head>
+<body>
+  <button class="toggle" onclick="toggleTheme()">Toggle Theme</button>
+  <header>
+    <img src="assets/SpanForge.png" alt="SpanForge Logo" class="logo-light" />
+    <img src="assets/SpanForge-dark.svg" alt="SpanForge Dark Logo" class="logo-dark" />
+    <h1>SpanForge</h1>
+    <div class="tagline">From noisy complaints to canonical adverse event spans.</div>
+    <div>
+      <span class="pill">OPEN</span>
+      <span class="pill" style="background:var(--accent2)">NER</span>
+      <span class="pill" style="background:var(--accent3);color:#172026">QUALITY</span>
+    </div>
+  </header>
+  <main>
+    <section>
+      <h2>What is SpanForge?</h2>
+      <p><strong>SpanForge</strong> is an adverse event annotation workflow: lexicon + fuzzy weak labeling, structured human curation in Label Studio, provenance-rich gold conversion, and BioBERT foundation for supervised NER.</p>
+    </section>
+    <section>
+      <h2>Features</h2>
+      <ul class="features-list">
+        <li><strong>Weak Labeling</strong>: Fuzzy + Jaccard gating with negation awareness.</li>
+        <li><strong>Annotation Toolkit</strong>: Import, convert, quality metrics, adjudication.</li>
+        <li><strong>Provenance Registry</strong>: Trace batches & revisions.</li>
+        <li><strong>Gold Conversion</strong>: Canonical mapping, integrity checks.</li>
+        <li><strong>Educational Notebook</strong>: End-to-end interactive walkthrough.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Quick Start</h2>
+      <pre><code>conda env create -f environment.yml
+conda activate NER
+pip install -r requirements.txt
+python scripts/verify_env.py
+pytest -q</code></pre>
+    </section>
+    <section>
+      <h2>Workflow</h2>
+      <div class="grid">
+        <div class="card"><h3>1. Ingest</h3><p>Load complaint text samples (de-identified).</p></div>
+        <div class="card"><h3>2. Weak Label</h3><p>Generate candidate SYMPTOM / PRODUCT spans with confidence & negation flags.</p></div>
+        <div class="card"><h3>3. Annotate</h3><p>Refine spans in Label Studio for high-quality gold.</p></div>
+        <div class="card"><h3>4. Convert</h3><p>Canonical mapping + provenance injection.</p></div>
+        <div class="card"><h3>5. Quality</h3><p>Metrics: conflicts, distribution, span density.</p></div>
+        <div class="card"><h3>6. Train (Planned)</h3><p>Token classification fine-tune & baseline comparison.</p></div>
+      </div>
+    </section>
+    <section>
+      <h2>Repository Links</h2>
+      <p>
+        <a href="https://github.com/paulboys/SpanForge" target="_blank" rel="noopener">GitHub Repository</a> ·
+        <a href="https://github.com/paulboys/SpanForge/tree/main/docs" target="_blank" rel="noopener">Documentation Folder</a>
+      </p>
+    </section>
+    <section>
+      <h2>Roadmap Highlights</h2>
+      <ul>
+        <li>Consensus + adjudication tooling</li>
+        <li>Gold corpus growth (≥100 tasks)</li>
+        <li>BioBERT token classification head</li>
+        <li>RoBERTa baseline evaluation</li>
+        <li>Active learning prioritization loop</li>
+      </ul>
+    </section>
+  </main>
+  <footer>
+    <p>SpanForge © 2025 · Open workflow for adverse event NER. Built with BioBERT, Label Studio, and care for data quality.</p>
+  </footer>
+</body>
+</html>

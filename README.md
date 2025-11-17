@@ -197,3 +197,10 @@ See: `docs/overview.md`, `docs/annotation_guide.md`, `docs/tutorial_labeling.md`
 
 ---
 For a hands-on walkthrough open `scripts/Workbook.ipynb`.
+
+## Public Landing Page
+GitHub Pages (enable in repository settings → Pages → Source: `docs/` folder):
+
+https://paulboys.github.io/SpanForge/
+
+Features: responsive layout, dark mode, quick start, workflow cards, roadmap highlights.
