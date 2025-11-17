@@ -1,3 +1,10 @@
+<div align="center">
+	<img src="assets/SpanForge.png" alt="SpanForge Logo" width="140" />
+	<h2 style="margin-top:0">SpanForge Annotation Guide</h2>
+	<p style="max-width:560px">Standards for consistent SYMPTOM and PRODUCT span curation enabling high-fidelity adverse event modeling.</p>
+	<hr style="width:55%;border:0;border-top:1px solid #ddd" />
+</div>
+
 # Annotation Guide
 
 Defines consistent rules for annotating SYMPTOM and PRODUCT spans in consumer adverse event complaints.

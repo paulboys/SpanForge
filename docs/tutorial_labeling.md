@@ -1,3 +1,10 @@
+<div align="center">
+  <img src="assets/SpanForge.png" alt="SpanForge Logo" width="130" />
+  <h2 style="margin-top:0">SpanForge Labeling Tutorial</h2>
+  <p style="max-width:560px">Step-by-step workflow for converting weak labels into high-quality gold adverse event spans using Label Studio.</p>
+  <hr style="width:55%;border:0;border-top:1px solid #ddd" />
+</div>
+
 # Labeling Tutorial (Label Studio)
 
 Walk-through for non-technical users to curate SYMPTOM and PRODUCT spans.

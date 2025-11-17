@@ -1,3 +1,10 @@
+<div align="center">
+	<img src="assets/SpanForge.png" alt="SpanForge Logo" width="160" />
+	<h2 style="margin-top:0">SpanForge Documentation</h2>
+	<p style="max-width:520px">Core architectural overview for the SpanForge adverse event annotation and NER pipeline.</p>
+	<hr style="width:50%;border:0;border-top:1px solid #ddd"/>
+</div>
+
 # Overview
 
 End-to-end Adverse Event NER pipeline integrating weak labeling, BioBERT embeddings, human annotation, and quality/provenance tracking. Designed to iteratively refine span quality before supervised fine-tuning.

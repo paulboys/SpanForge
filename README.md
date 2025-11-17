@@ -1,6 +1,36 @@
-# SpanForge: Adverse Event NER Workflow (BioBERT + Weak Labeling + Annotation)
+<div align="center">
+  <img src="docs/assets/SpanForge.png" alt="SpanForge Logo" width="240" />
+  <h1>SpanForge</h1>
+  <p><em>From noisy complaints to canonical adverse event spans.</em></p>
+  <p>
+    <strong>Adverse Event NER Workflow</strong><br/>
+    BioBERT + Weak Labeling + Human Annotation + Provenance Quality
+  </p>
+  <hr style="width:60%;border:0;border-top:1px solid #ccc" />
+</div>
 
-End-to-end prototype for extracting symptom-like adverse events and product mentions from consumer complaints using BioBERT plus lexicon/fuzzy heuristics, human curation in Label Studio, and provenance/quality reporting.
+End-to-end workflow for extracting symptom-like adverse events and product mentions from consumer complaints using BioBERT plus lexicon/fuzzy heuristics, human curation in Label Studio, and provenance/quality reporting.
+
+<details>
+<summary><strong>Table of Contents</strong></summary>
+
+1. Current Capability Snapshot
+2. Quick Start
+3. High-Level Workflow
+4. Architecture Overview
+5. Key Components
+6. Weak Labeling Heuristics
+7. Annotation Workflow
+8. Provenance & Registry
+9. Quality Metrics
+10. Directory Layout
+11. Testing
+12. Roadmap
+13. Contributing
+14. Privacy & Compliance
+15. Next Steps
+16. Reference Docs
+</details>
 
 ## Current Capability Snapshot
 | Stage | Implemented | Notes |

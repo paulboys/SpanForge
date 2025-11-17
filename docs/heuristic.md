@@ -1,3 +1,10 @@
+<div align="center">
+	<img src="assets/SpanForge.png" alt="SpanForge Logo" width="125" />
+	<h2 style="margin-top:0">SpanForge Weak Labeling Heuristics</h2>
+	<p style="max-width:540px">Specification of lexical + fuzzy gating rules that bootstrap adverse event span discovery prior to supervised BioBERT fine-tuning.</p>
+	<hr style="width:50%;border:0;border-top:1px solid #ddd" />
+</div>
+
 # Weak Labeling Heuristics
 
 Defines rule-based span proposal logic prior to supervised training.
