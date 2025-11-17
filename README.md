@@ -1,5 +1,8 @@
 <div align="center">
-  <img src="docs/assets/SpanForge.png" alt="SpanForge Logo" width="240" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/SpanForge-dark.svg" />
+    <img src="docs/assets/SpanForge.png" alt="SpanForge Logo" width="240" />
+  </picture>
   <h1>SpanForge</h1>
   <p><em>From noisy complaints to canonical adverse event spans.</em></p>
   <p>
