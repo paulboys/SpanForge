@@ -5,7 +5,7 @@
 ![SpanForge Logo Dark](docs/assets/SpanForge-dark.svg#gh-dark-mode-only)
 
 <p><em>From noisy complaints to canonical adverse event spans.</em><br/>
-<strong>BioBERT · Weak Labeling · Human Annotation · Provenance Quality</strong></p>
+<strong>BioBERT · Weak Labeling · Human Annotation · Provenance · Quality</strong></p>
 <hr style="width:58%;border:0;border-top:1px solid #d0d0d0;margin-top:12px" />
 </div>
 
