@@ -1,0 +1,8 @@
+<View>
+  <Labels name="label" toName="text">
+    <Label value="SYMPTOM" background="red"/>
+    <Label value="PRODUCT" background="blue"/>
+  </Labels>
+  <Text name="text" value="$text"/>
+  <!-- Optional checkbox for negation tracking (future integration) -->
+</View>

@@ -1,0 +1,10 @@
+python-dotenv
+pydantic
+typer
+transformers
+torch
+numpy
+pandas
+pytest
+pydantic-settings
+rapidfuzz

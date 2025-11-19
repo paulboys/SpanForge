@@ -1,0 +1,18 @@
+name: NER
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - python-dotenv
+  - pydantic
+  - pydantic-settings
+  - typer
+  - numpy
+  - pandas
+  - pip
+  - pip:
+    - torch
+    - transformers
+    - pytest
+    - rapidfuzz

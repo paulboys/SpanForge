@@ -1,0 +1,5 @@
+{
+  "title": "Adverse Event NER",
+  "label_config": "<View>\n  <Labels name=\"label\" toName=\"text\">\n    <Label value=\"SYMPTOM\" background=\"red\"/>\n    <Label value=\"PRODUCT\" background=\"blue\"/>\n  </Labels>\n  <Text name=\"text\" value=\"$text\"/>\n  <!-- Optional checkbox for negation tracking (future integration) -->\n</View>\n",
+  "description": "Adverse event NER annotation project (SYMPTOM, PRODUCT)."
+}

@@ -1,0 +1,2 @@
+timestamp,batch_id,gold_file,n_tasks,annotators,revision,notes
+2025-11-16T10:16:28,workflow_demo_batch,data\annotation\exports\workflow_demo_gold.jsonl,5,demo_user,1,Interactive notebook demo of complete annotation workflow
