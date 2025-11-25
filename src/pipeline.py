@@ -1,12 +1,28 @@
-from typing import List, Dict, Any
+"""End-to-end inference pipeline combining BioBERT and weak labeling.
+
+Provides batch processing with model inference, weak labeling, and
+optional persistence to JSONL format.
+"""
+from typing import List, Dict, Any, Optional
 import torch
+from transformers import AutoTokenizer, BatchEncoding
 from .config import AppConfig
 from .model import get_model, get_tokenizer, encode_text
 from pathlib import Path
 from .weak_label import load_symptom_lexicon, load_product_lexicon, weak_label_batch, persist_weak_labels_jsonl
 
 
-def tokenize_batch(texts: List[str], tokenizer, max_len: int):
+def tokenize_batch(texts: List[str], tokenizer: AutoTokenizer, max_len: int) -> BatchEncoding:
+    """Tokenize batch of texts for model input.
+    
+    Args:
+        texts: List of input text strings
+        tokenizer: PreTrainedTokenizer instance
+        max_len: Maximum sequence length for truncation
+        
+    Returns:
+        BatchEncoding with padded and truncated sequences
+    """
     return tokenizer(
         texts,
         truncation=True,
@@ -16,18 +32,60 @@ def tokenize_batch(texts: List[str], tokenizer, max_len: int):
     )
 
 
-def predict_tokens(model, encodings, device: str) -> Dict[str, Any]:
+def predict_tokens(model: Any, encodings: BatchEncoding, device: str) -> Dict[str, Any]:
+    """Run model inference on encoded batch.
+    
+    Args:
+        model: PreTrainedModel instance
+        encodings: BatchEncoding from tokenizer
+        device: Device string ('cuda' or 'cpu')
+        
+    Returns:
+        Dictionary containing last_hidden_state from model output
+    """
     with torch.no_grad():
         outputs = model(**{k: v.to(device) for k, v in encodings.items()})
     return {"last_hidden_state": outputs.last_hidden_state}
 
 
-def postprocess_predictions(batch_tokens, model_outputs) -> List[Dict[str, Any]]:
+def postprocess_predictions(batch_tokens: List[List[str]], model_outputs: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Postprocess model outputs (placeholder for future expansion).
+    
+    Args:
+        batch_tokens: List of tokenized texts
+        model_outputs: Dictionary containing model predictions
+        
+    Returns:
+        List of dictionaries with basic token count
+        
+    Note:
+        This is a placeholder for future lexicon-based span extraction.
+    """
     # Placeholder: extend with lexicon match, span extraction, normalization.
     return [{"token_count": len(tokens)} for tokens in batch_tokens]
 
 
-def simple_inference(texts: List[str], persist_path: str = None) -> List[Dict[str, Any]]:
+def simple_inference(texts: List[str], persist_path: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Run end-to-end inference pipeline with weak labeling.
+    
+    Combines BioBERT inference with lexicon-based weak labeling.
+    Optionally persists results to JSONL format.
+    
+    Args:
+        texts: List of input text strings to analyze
+        persist_path: Optional path to save weak labels in JSONL format
+        
+    Returns:
+        List of dictionaries containing:
+            - token_count: Number of tokens in text
+            - weak_spans: List of detected symptom/product spans with metadata
+            
+    Example:
+        >>> texts = ["Patient has severe rash and headache"]
+        >>> results = simple_inference(texts, persist_path="output.jsonl")
+        >>> print(results[0]['weak_spans'])
+        [{'text': 'rash', 'label': 'SYMPTOM', ...}]
+    """
     config = AppConfig()
     tokenizer = get_tokenizer(config)
     model = get_model(config)
