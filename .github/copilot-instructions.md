@@ -8,27 +8,30 @@ Implements configuration, BioBERT loading, lexicon-based weak labeling, explorat
 ## Current State
 - Model loader: `src/model.py` (BioBERT `dmis-lab/biobert-base-cased-v1.1`)
 - Config: `src/config.py` (fields: `model_name`, `max_seq_len`, `device`, `seed`, `negation_window`, `fuzzy_scorer`)
-- Weak labeling: `src/weak_label.py` (symptom/product lexicons, fuzzy 0.88, Jaccard ≥40, negation window 5, anatomy skip, last‑token alignment)
+- Weak labeling: `src/weak_label.py` (symptom/product lexicons, fuzzy 0.88, Jaccard ≥40, bidirectional negation window 5, emoji handling, anatomy skip, last‑token alignment)
 - Pipeline: `src/pipeline.py` (simple inference + optional JSONL persistence)
 - Lexicon build: `scripts/build_meddra_symptom_lexicon.py`
 - Notebook: `scripts/Workbook.ipynb` (exploration & education)
 - Environment check: `scripts/verify_env.py`
-- Lexicons: `data/lexicon/symptoms.csv`, `data/lexicon/products.csv`
+- Lexicons: `data/lexicon/symptoms.csv` (includes burning/burning sensation), `data/lexicon/products.csv`
 - Output artifact: `data/output/notebook_test.jsonl`
-- Tests present under `tests/` (weak labeling, overlap, forward pass)
+- Test Suite: 144 tests (16 core, 98 edge cases, 26 integration, 4 curation) - 100% passing
+- CI/CD: GitHub Actions workflows (test.yml, pre-commit.yml), pre-commit hooks, pyproject.toml config
 - Dependencies: `requirements.txt`
 
 ## Roadmap Phases
-1. Bootstrap & Lexicon (DONE / iterative)
-2. Weak Label Refinement (ACTIVE)
-3. Annotation & Curation (Label Studio integration) (UPCOMING)
-4. Gold Standard Assembly
-5. Token Classification Fine‑Tune (BioBERT + classification head)
-6. Domain Adaptation (MLM on complaints corpus)
-7. Baseline Comparison (RoBERTa)
-8. Evaluation & Calibration (precision/recall/F1, confidence thresholds)
-9. Educational Docs Expansion
-10. Continuous Improvement & Active Learning
+1. Bootstrap & Lexicon (DONE)
+2. Weak Label Refinement (DONE - bidirectional negation, emoji handling)
+3. Test Infrastructure & Edge Cases (DONE - 144/144 tests passing)
+4. CI/CD Integration (DONE - GitHub Actions, pre-commit hooks)
+5. Annotation & Curation (Label Studio integration) (UPCOMING)
+6. Gold Standard Assembly
+7. Token Classification Fine‑Tune (BioBERT + classification head)
+8. Domain Adaptation (MLM on complaints corpus)
+9. Baseline Comparison (RoBERTa)
+10. Evaluation & Calibration (precision/recall/F1, confidence thresholds)
+11. Educational Docs Expansion
+12. Continuous Improvement & Active Learning
 
 ## Annotation & Curation Plan (Planned)
 - Tool: Label Studio (local, telemetry disabled)
