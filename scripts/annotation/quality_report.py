@@ -11,10 +11,11 @@ Usage:
   python scripts/annotation/quality_report.py --gold data/annotation/exports/gold_full.jsonl --out data/annotation/reports/quality.json
 """
 from __future__ import annotations
+
 import argparse
 import json
-from pathlib import Path
 from itertools import combinations
+from pathlib import Path
 
 
 def iter_records(path: Path):
@@ -58,10 +59,14 @@ def main():
         sorted_ents = sorted(ents, key=lambda e: e["start"])
         for i in range(len(sorted_ents)):
             for j in range(i + 1, len(sorted_ents)):
-                a = sorted_ents[i]; b = sorted_ents[j]
+                a = sorted_ents[i]
+                b = sorted_ents[j]
                 if b["start"] >= a["end"]:  # non-overlapping forward
                     break
-                if min(a["end"], b["end"]) - max(a["start"], b["start"]) > 0 and a["label"] != b["label"]:
+                if (
+                    min(a["end"], b["end"]) - max(a["start"], b["start"]) > 0
+                    and a["label"] != b["label"]
+                ):
                     conflict_count += 1
         for e in ents:
             label_counts.setdefault(e["label"], 0)
@@ -80,7 +85,8 @@ def main():
             ann = rec.get("annotator", "unknown")
             task_map.setdefault(tid, {})[ann] = rec.get("entities", [])
         for a1, a2 in combinations(annotators, 2):
-            agreements = 0; total = 0
+            agreements = 0
+            total = 0
             for tid, ann_map in task_map.items():
                 if a1 in ann_map and a2 in ann_map:
                     spans1 = [(e["start"], e["end"]) for e in ann_map[a1]]

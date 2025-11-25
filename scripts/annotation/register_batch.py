@@ -7,13 +7,14 @@ Usage:
   python scripts/annotation/register_batch.py --batch-id complaints_batch_2025Q4 --gold data/annotation/exports/gold_full.jsonl --annotators alice --revision 1 --notes "initial mock batch"
 """
 from __future__ import annotations
+
 import argparse
-from pathlib import Path
 import csv
 import json
 from datetime import datetime
+from pathlib import Path
 
-HEADER = ["timestamp","batch_id","gold_file","n_tasks","annotators","revision","notes"]
+HEADER = ["timestamp", "batch_id", "gold_file", "n_tasks", "annotators", "revision", "notes"]
 
 
 def count_tasks(gold_path: Path) -> int:
@@ -32,7 +33,9 @@ def main():
     parser.add_argument("--annotators", required=True, help="Comma-separated annotators")
     parser.add_argument("--revision", type=int, default=0, help="Revision number")
     parser.add_argument("--notes", default="", help="Freeform notes")
-    parser.add_argument("--registry", default="data/annotation/registry.csv", help="Registry CSV path")
+    parser.add_argument(
+        "--registry", default="data/annotation/registry.csv", help="Registry CSV path"
+    )
     args = parser.parse_args()
 
     gold_path = Path(args.gold)
@@ -46,15 +49,17 @@ def main():
         writer = csv.writer(f)
         if new_file:
             writer.writerow(HEADER)
-        writer.writerow([
-            datetime.utcnow().isoformat(timespec="seconds"),
-            args.batch_id,
-            str(gold_path),
-            n_tasks,
-            args.annotators,
-            args.revision,
-            args.notes,
-        ])
+        writer.writerow(
+            [
+                datetime.utcnow().isoformat(timespec="seconds"),
+                args.batch_id,
+                str(gold_path),
+                n_tasks,
+                args.annotators,
+                args.revision,
+                args.notes,
+            ]
+        )
     print(f"Registered batch {args.batch_id} ({n_tasks} tasks) -> {registry_path}")
 
 

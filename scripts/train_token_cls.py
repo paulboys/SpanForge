@@ -15,15 +15,16 @@ Assumptions:
   - Sequence truncation at config.max_seq_len.
 """
 from __future__ import annotations
+
 import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import torch
-from torch.utils.data import Dataset, DataLoader
-from transformers import get_linear_schedule_with_warmup, AdamW
+from torch.utils.data import DataLoader, Dataset
+from transformers import AdamW, get_linear_schedule_with_warmup
 
 from src.config import get_config
 from src.model_token_cls import get_token_cls_model, load_labels
@@ -43,11 +44,22 @@ def read_gold(path: Path) -> List[Record]:
             if not line.strip():
                 continue
             obj = json.loads(line)
-            records.append(Record(rid=str(obj.get("id")), text=obj.get("text", ""), entities=obj.get("entities", [])))
+            records.append(
+                Record(
+                    rid=str(obj.get("id")),
+                    text=obj.get("text", ""),
+                    entities=obj.get("entities", []),
+                )
+            )
     return records
 
 
-def spans_to_bio(tokens: List[str], offsets: List[tuple], entities: List[Dict[str, Any]], label2id: Dict[str, int]) -> List[int]:
+def spans_to_bio(
+    tokens: List[str],
+    offsets: List[tuple],
+    entities: List[Dict[str, Any]],
+    label2id: Dict[str, int],
+) -> List[int]:
     # Build char-level map to entity label
     tags = ["O"] * len(tokens)
     for ent in entities:
@@ -79,7 +91,9 @@ class TokenClsDataset(Dataset):
 
     def __getitem__(self, idx):
         r = self.records[idx]
-        encoding = self.tokenizer(r.text, return_offsets_mapping=True, truncation=True, max_length=self.max_len)
+        encoding = self.tokenizer(
+            r.text, return_offsets_mapping=True, truncation=True, max_length=self.max_len
+        )
         offsets = encoding.pop("offset_mapping")
         input_ids = encoding["input_ids"]
         attention_mask = encoding["attention_mask"]
@@ -98,7 +112,9 @@ class TokenClsDataset(Dataset):
 def train(model, dataloader, epochs: int, lr: float, device: str, output_dir: Path):
     optimizer = AdamW(model.parameters(), lr=lr)
     total_steps = len(dataloader) * epochs
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=int(0.1 * total_steps), num_training_steps=total_steps)
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer, num_warmup_steps=int(0.1 * total_steps), num_training_steps=total_steps
+    )
     model.train()
     for epoch in range(1, epochs + 1):
         total_loss = 0.0

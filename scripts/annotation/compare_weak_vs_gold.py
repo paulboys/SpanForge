@@ -15,11 +15,12 @@ Matching Rule:
 Outputs JSON with per-label precision/recall/F1 and confidence bucket stats, plus heuristic suggestions.
 """
 from __future__ import annotations
+
 import argparse
 import json
+from collections import Counter, defaultdict
 from pathlib import Path
-from typing import List, Dict, Any, Tuple, DefaultDict
-from collections import defaultdict, Counter
+from typing import Any, DefaultDict, Dict, List, Tuple
 
 LABELS = {"SYMPTOM", "PRODUCT"}
 CONF_BUCKETS = [0.7, 0.8, 0.9, 0.95, 1.01]  # upper bounds
@@ -105,7 +106,7 @@ def compute_metrics(gold_idx, weak_idx) -> Dict[str, Any]:
                 else:
                     label_stats[label]["fp"] += 1
             # FNs
-            label_stats[label]["fn"] += (len(gold_spans) - len(matched_gold))
+            label_stats[label]["fn"] += len(gold_spans) - len(matched_gold)
 
     # Compute precision/recall/F1
     report = {"labels": {}, "overall": {}}
@@ -116,20 +117,32 @@ def compute_metrics(gold_idx, weak_idx) -> Dict[str, Any]:
         rec = tp / (tp + fn) if (tp + fn) else 0.0
         f1 = 2 * prec * rec / (prec + rec) if (prec + rec) else 0.0
         report["labels"][label] = {
-            "tp": tp, "fp": fp, "fn": fn,
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
             "precision": round(prec, 4),
             "recall": round(rec, 4),
             "f1": round(f1, 4),
-            "confidence_buckets": dict(conf_counts[label])
+            "confidence_buckets": dict(conf_counts[label]),
         }
-        total_tp += tp; total_fp += fp; total_fn += fn
+        total_tp += tp
+        total_fp += fp
+        total_fn += fn
     overall_prec = total_tp / (total_tp + total_fp) if (total_tp + total_fp) else 0.0
     overall_rec = total_tp / (total_tp + total_fn) if (total_tp + total_fn) else 0.0
-    overall_f1 = 2 * overall_prec * overall_rec / (overall_prec + overall_rec) if (overall_prec + overall_rec) else 0.0
-    report["overall"] = {"tp": total_tp, "fp": total_fp, "fn": total_fn,
-                          "precision": round(overall_prec, 4),
-                          "recall": round(overall_rec, 4),
-                          "f1": round(overall_f1, 4)}
+    overall_f1 = (
+        2 * overall_prec * overall_rec / (overall_prec + overall_rec)
+        if (overall_prec + overall_rec)
+        else 0.0
+    )
+    report["overall"] = {
+        "tp": total_tp,
+        "fp": total_fp,
+        "fn": total_fn,
+        "precision": round(overall_prec, 4),
+        "recall": round(overall_rec, 4),
+        "f1": round(overall_f1, 4),
+    }
 
     # Suggestions
     suggestions = []
@@ -137,9 +150,13 @@ def compute_metrics(gold_idx, weak_idx) -> Dict[str, Any]:
         high_fp = stats["fp"] > stats["tp"] and stats["tp"] > 0
         low_rec = stats["recall"] < 0.6
         if high_fp:
-            suggestions.append(f"Label {label}: High FP; consider raising fuzzy threshold or Jaccard gate.")
+            suggestions.append(
+                f"Label {label}: High FP; consider raising fuzzy threshold or Jaccard gate."
+            )
         if low_rec and stats["tp"] > 0:
-            suggestions.append(f"Label {label}: Low recall; consider lowering fuzzy threshold slightly or expanding lexicon.")
+            suggestions.append(
+                f"Label {label}: Low recall; consider lowering fuzzy threshold slightly or expanding lexicon."
+            )
     if not suggestions:
         suggestions.append("Metrics acceptable; tune thresholds only after larger validation set.")
     report["suggestions"] = suggestions

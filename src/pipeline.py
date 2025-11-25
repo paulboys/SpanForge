@@ -3,43 +3,45 @@
 Provides batch processing with model inference, weak labeling, and
 optional persistence to JSONL format.
 """
-from typing import List, Dict, Any, Optional
+
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import torch
 from transformers import AutoTokenizer, BatchEncoding
+
 from .config import AppConfig
-from .model import get_model, get_tokenizer, encode_text
-from pathlib import Path
-from .weak_label import load_symptom_lexicon, load_product_lexicon, weak_label_batch, persist_weak_labels_jsonl
+from .model import encode_text, get_model, get_tokenizer
+from .weak_label import (
+    load_product_lexicon,
+    load_symptom_lexicon,
+    persist_weak_labels_jsonl,
+    weak_label_batch,
+)
 
 
 def tokenize_batch(texts: List[str], tokenizer: AutoTokenizer, max_len: int) -> BatchEncoding:
     """Tokenize batch of texts for model input.
-    
+
     Args:
         texts: List of input text strings
         tokenizer: PreTrainedTokenizer instance
         max_len: Maximum sequence length for truncation
-        
+
     Returns:
         BatchEncoding with padded and truncated sequences
     """
-    return tokenizer(
-        texts,
-        truncation=True,
-        max_length=max_len,
-        padding=True,
-        return_tensors="pt"
-    )
+    return tokenizer(texts, truncation=True, max_length=max_len, padding=True, return_tensors="pt")
 
 
 def predict_tokens(model: Any, encodings: BatchEncoding, device: str) -> Dict[str, Any]:
     """Run model inference on encoded batch.
-    
+
     Args:
         model: PreTrainedModel instance
         encodings: BatchEncoding from tokenizer
         device: Device string ('cuda' or 'cpu')
-        
+
     Returns:
         Dictionary containing last_hidden_state from model output
     """
@@ -48,16 +50,18 @@ def predict_tokens(model: Any, encodings: BatchEncoding, device: str) -> Dict[st
     return {"last_hidden_state": outputs.last_hidden_state}
 
 
-def postprocess_predictions(batch_tokens: List[List[str]], model_outputs: Dict[str, Any]) -> List[Dict[str, Any]]:
+def postprocess_predictions(
+    batch_tokens: List[List[str]], model_outputs: Dict[str, Any]
+) -> List[Dict[str, Any]]:
     """Postprocess model outputs (placeholder for future expansion).
-    
+
     Args:
         batch_tokens: List of tokenized texts
         model_outputs: Dictionary containing model predictions
-        
+
     Returns:
         List of dictionaries with basic token count
-        
+
     Note:
         This is a placeholder for future lexicon-based span extraction.
     """
@@ -67,19 +71,19 @@ def postprocess_predictions(batch_tokens: List[List[str]], model_outputs: Dict[s
 
 def simple_inference(texts: List[str], persist_path: Optional[str] = None) -> List[Dict[str, Any]]:
     """Run end-to-end inference pipeline with weak labeling.
-    
+
     Combines BioBERT inference with lexicon-based weak labeling.
     Optionally persists results to JSONL format.
-    
+
     Args:
         texts: List of input text strings to analyze
         persist_path: Optional path to save weak labels in JSONL format
-        
+
     Returns:
         List of dictionaries containing:
             - token_count: Number of tokens in text
             - weak_spans: List of detected symptom/product spans with metadata
-            
+
     Example:
         >>> texts = ["Patient has severe rash and headache"]
         >>> results = simple_inference(texts, persist_path="output.jsonl")
@@ -93,24 +97,30 @@ def simple_inference(texts: List[str], persist_path: Optional[str] = None) -> Li
     outputs = predict_tokens(model, encodings, config.device)
     batch_tokens = [tokenizer.tokenize(t) for t in texts]
     base = postprocess_predictions(batch_tokens, outputs)
-    
+
     # Load lexicons
     symptom_lex_path = Path("data/lexicon/symptoms.csv")
     product_lex_path = Path("data/lexicon/products.csv")
     symptom_lexicon = load_symptom_lexicon(symptom_lex_path)
     product_lexicon = load_product_lexicon(product_lex_path)
-    
+
     # Weak labeling with config params
-    wl = weak_label_batch(
-        texts, symptom_lexicon, product_lexicon,
-        negation_window=config.negation_window,
-        scorer=config.fuzzy_scorer
-    ) if (symptom_lexicon or product_lexicon) else [[] for _ in texts]
-    
+    wl = (
+        weak_label_batch(
+            texts,
+            symptom_lexicon,
+            product_lexicon,
+            negation_window=config.negation_window,
+            scorer=config.fuzzy_scorer,
+        )
+        if (symptom_lexicon or product_lexicon)
+        else [[] for _ in texts]
+    )
+
     # Persist if requested
     if persist_path:
         persist_weak_labels_jsonl(texts, wl, Path(persist_path))
-    
+
     # Merge
     for rec, spans in zip(base, wl):
         rec["weak_spans"] = [
@@ -124,6 +134,7 @@ def simple_inference(texts: List[str], persist_path: Optional[str] = None) -> Li
                 "category": s.category,
                 "confidence": s.confidence,
                 "negated": s.negated,
-            } for s in spans
+            }
+            for s in spans
         ]
     return base

@@ -12,10 +12,11 @@ Example:
   python scripts/annotation/cli.py bootstrap --name "Adverse Event NER"
 """
 from __future__ import annotations
+
 import argparse
+import subprocess
 import sys
 from pathlib import Path
-import subprocess
 
 SCRIPT_DIR = Path(__file__).parent
 
@@ -25,7 +26,7 @@ SUBCMDS = {
     "quality": "quality_report.py",
     "adjudicate": "adjudicate.py",
     "register": "register_batch.py",
-  "refine-llm": "refine_llm.py",
+    "refine-llm": "refine_llm.py",
 }
 
 

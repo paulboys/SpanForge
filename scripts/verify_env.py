@@ -1,5 +1,6 @@
-import sys
 import pathlib
+import sys
+
 import torch
 
 # Ensure project root is on sys.path so 'src' package resolves even if run from a shell
@@ -23,6 +24,7 @@ def main():
         print("Running CPU-only inference.")
     print(f"Model name: {config.model_name}")
     print(f"Device selected by config: {config.device}")
+
 
 if __name__ == "__main__":
     main()

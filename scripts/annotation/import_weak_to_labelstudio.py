@@ -13,14 +13,18 @@ Usage:
 Optional API push (if --push and LABEL_STUDIO_API_KEY + --project-id provided).
 """
 from __future__ import annotations
+
 import argparse
 import json
-from pathlib import Path
 import os
 import sys
+from pathlib import Path
+
 import requests  # type: ignore
 from dotenv import load_dotenv
+
 load_dotenv()  # Load .env file from project root
+
 
 def read_weak(path: Path):
     records = []
@@ -77,20 +81,30 @@ def push_tasks(tasks, project_id: int, base_url: str, api_key: str):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Prepare (and optionally import) weak tasks into Label Studio")
+    parser = argparse.ArgumentParser(
+        description="Prepare (and optionally import) weak tasks into Label Studio"
+    )
     parser.add_argument("--weak", required=True, help="Weak labels JSONL path")
     parser.add_argument("--out", required=True, help="Output tasks JSON path")
-    parser.add_argument("--include-preannotated", action="store_true", help="Include weak spans as predictions")
-    parser.add_argument("--min-confidence", type=float, default=None, help="Filter spans below confidence threshold")
+    parser.add_argument(
+        "--include-preannotated", action="store_true", help="Include weak spans as predictions"
+    )
+    parser.add_argument(
+        "--min-confidence", type=float, default=None, help="Filter spans below confidence threshold"
+    )
     parser.add_argument("--push", action="store_true", help="Push tasks to Label Studio via API")
-    parser.add_argument("--project-id", type=int, default=None, help="Target project id (required if --push)")
+    parser.add_argument(
+        "--project-id", type=int, default=None, help="Target project id (required if --push)"
+    )
     parser.add_argument("--base-url", default="http://localhost:8080", help="Label Studio base URL")
     args = parser.parse_args()
 
     weak_path = Path(args.weak)
     out_path = Path(args.out)
     records = read_weak(weak_path)
-    tasks = to_tasks(records, include_preannotated=args.include_preannotated, min_confidence=args.min_confidence)
+    tasks = to_tasks(
+        records, include_preannotated=args.include_preannotated, min_confidence=args.min_confidence
+    )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(tasks, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"Wrote {len(tasks)} tasks to {out_path}")

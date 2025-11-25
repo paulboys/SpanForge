@@ -3,14 +3,15 @@
 Validates gold JSONL files for provenance, canonical presence, overlap rules,
 and boundary correctness using composition-based assertions.
 """
+
 import json
-from pathlib import Path
-import pytest
 import unittest
+from pathlib import Path
 
-from tests.base import IntegrationTestBase
+import pytest
+
 from tests.assertions import IntegrityValidator, OverlapChecker, SpanAsserter
-
+from tests.base import IntegrationTestBase
 
 ALLOWED_LABELS = {"SYMPTOM", "PRODUCT"}
 EXPORT_DIR = Path("data/annotation/exports")
@@ -33,7 +34,7 @@ def find_gold_files():
 
 class TestCurationIntegrity(unittest.TestCase):
     """Integrity tests for gold annotation files."""
-    
+
     def setUp(self):
         self.integrity_validator = IntegrityValidator(self)
         self.overlap_checker = OverlapChecker(self)
@@ -45,24 +46,26 @@ def test_curation_integrity(gold_file):
     """Parametrized test for all gold files."""
     if gold_file is None:
         pytest.skip("No gold JSONL files present; skipping curation integrity test.")
-    
+
     # Create test instance for validators
     test_case = TestCurationIntegrity()
     test_case.setUp()
-    
+
     for record in _iter_jsonl(gold_file):
         # Run full integrity validation
         test_case.integrity_validator.validate_full_record(record)
-        
+
         # Additional record-level checks
         if "revision" in record:
-            assert isinstance(record["revision"], int) and record["revision"] >= 0, \
-                "Revision must be non-negative int"
-        
+            assert (
+                isinstance(record["revision"], int) and record["revision"] >= 0
+            ), "Revision must be non-negative int"
+
         entities = record.get("entities", [])
-        
+
         # Verify concept_id format if present
         for ent in entities:
             if "concept_id" in ent:
-                assert isinstance(ent["concept_id"], str) and ent["concept_id"], \
-                    f"Invalid concept_id in entity: {ent}"
+                assert (
+                    isinstance(ent["concept_id"], str) and ent["concept_id"]
+                ), f"Invalid concept_id in entity: {ent}"

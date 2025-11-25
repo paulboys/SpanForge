@@ -3,6 +3,7 @@
 This module provides centralized configuration using Pydantic BaseSettings,
 allowing both default values and environment variable overrides.
 """
+
 from typing import Optional
 
 try:
@@ -18,7 +19,7 @@ except ImportError:
 
 class AppConfig(BaseSettings):
     """Application configuration with defaults and environment override support.
-    
+
     Attributes:
         model_name: HuggingFace model identifier for BioBERT base model
         max_seq_len: Maximum sequence length for tokenization
@@ -33,6 +34,7 @@ class AppConfig(BaseSettings):
         llm_cache_path: Path to LLM response cache file
         llm_prompt_version: Version identifier for prompt templates
     """
+
     model_name: str = "dmis-lab/biobert-base-cased-v1.1"
     max_seq_len: int = 256
     device: str = "cuda" if (torch and torch.cuda.is_available()) else "cpu"
@@ -46,12 +48,13 @@ class AppConfig(BaseSettings):
     llm_cache_path: str = "data/annotation/exports/llm_cache.jsonl"
     llm_prompt_version: str = "v1"
 
+
 def get_config() -> AppConfig:
     """Get application configuration instance.
-    
+
     Returns:
         AppConfig instance with default or environment-overridden values
-        
+
     Example:
         >>> config = get_config()
         >>> print(config.model_name)
@@ -62,18 +65,20 @@ def get_config() -> AppConfig:
 
 def set_seed(seed: int) -> None:
     """Set random seeds for reproducibility across libraries.
-    
+
     Sets seeds for Python random, NumPy, and PyTorch (CPU and CUDA).
-    
+
     Args:
         seed: Integer seed value for all random number generators
-        
+
     Example:
         >>> set_seed(42)
         >>> # All subsequent random operations will be reproducible
     """
     import random
+
     import numpy as np
+
     random.seed(seed)
     np.random.seed(seed)
     if torch is not None:

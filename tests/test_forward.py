@@ -1,10 +1,13 @@
-import sys, pathlib
+import pathlib
+import sys
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.config import get_config
-from src.model import get_model, get_tokenizer, encode_text
+from src.model import encode_text, get_model, get_tokenizer
+
 
 def test_forward_pass():
     config = get_config()

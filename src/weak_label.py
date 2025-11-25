@@ -27,49 +27,117 @@ See Also:
     - Negation Guide: docs/user-guide/negation.md
     - API Reference: docs/api/weak_label.md
 """
+
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import List, Dict, Tuple, Optional
+
 import csv
-import re
 import json
+import re
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 try:
     from rapidfuzz import fuzz, process  # type: ignore
+
     HAVE_RAPIDFUZZ = True
 except ImportError:  # Fallback to difflib if rapidfuzz unavailable at runtime
     import difflib
+
     HAVE_RAPIDFUZZ = False
 
 # Expanded negation cue list (Phase 3)
 NEGATION_TOKENS = {
-    "no", "not", "without", "never", "none", "n't",
-    "absent", "denies", "denied", "deny", "negative",
-    "unremarkable", "resolv", "cleared", "improved"
+    "no",
+    "not",
+    "without",
+    "never",
+    "none",
+    "n't",
+    "absent",
+    "denies",
+    "denied",
+    "deny",
+    "negative",
+    "unremarkable",
+    "resolv",
+    "cleared",
+    "improved",
 }
 WORD_PATTERN = re.compile(r"\b\w[\w\-']*\b")
 # Emoji pattern for detection (Phase 3 - improved unicode handling)
 EMOJI_PATTERN = re.compile(
     "["
-    "\U0001F600-\U0001F64F"  # emoticons
-    "\U0001F300-\U0001F5FF"  # symbols & pictographs
-    "\U0001F680-\U0001F6FF"  # transport & map symbols
-    "\U0001F700-\U0001F77F"  # alchemical symbols
-    "\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
-    "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
-    "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
-    "\U0001FA00-\U0001FA6F"  # Chess Symbols
-    "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
-    "\U00002702-\U000027B0"  # Dingbats
-    "\U000024C2-\U0001F251" 
-    "]+", flags=re.UNICODE
+    "\U0001f600-\U0001f64f"  # emoticons
+    "\U0001f300-\U0001f5ff"  # symbols & pictographs
+    "\U0001f680-\U0001f6ff"  # transport & map symbols
+    "\U0001f700-\U0001f77f"  # alchemical symbols
+    "\U0001f780-\U0001f7ff"  # Geometric Shapes Extended
+    "\U0001f800-\U0001f8ff"  # Supplemental Arrows-C
+    "\U0001f900-\U0001f9ff"  # Supplemental Symbols and Pictographs
+    "\U0001fa00-\U0001fa6f"  # Chess Symbols
+    "\U0001fa70-\U0001faff"  # Symbols and Pictographs Extended-A
+    "\U00002702-\U000027b0"  # Dingbats
+    "\U000024c2-\U0001f251"
+    "]+",
+    flags=re.UNICODE,
 )
 STOPWORDS = {
-    "i","a","an","the","and","or","to","for","of","in","on","at","but","so","with","after","before","from","my","me","we","our","this","that","it","is","was","are","were"
+    "i",
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "to",
+    "for",
+    "of",
+    "in",
+    "on",
+    "at",
+    "but",
+    "so",
+    "with",
+    "after",
+    "before",
+    "from",
+    "my",
+    "me",
+    "we",
+    "our",
+    "this",
+    "that",
+    "it",
+    "is",
+    "was",
+    "are",
+    "were",
 }
 ANATOMY_TOKENS = {
-    "face","skin","arm","arms","leg","legs","hand","hands","eye","eyes","ear","ears","nose","mouth","lip","lips","cheek","cheeks","forehead","scalp","neck","back"
+    "face",
+    "skin",
+    "arm",
+    "arms",
+    "leg",
+    "legs",
+    "hand",
+    "hands",
+    "eye",
+    "eyes",
+    "ear",
+    "ears",
+    "nose",
+    "mouth",
+    "lip",
+    "lips",
+    "cheek",
+    "cheeks",
+    "forehead",
+    "scalp",
+    "neck",
+    "back",
 }
+
 
 @dataclass
 class LexiconEntry:
@@ -80,11 +148,12 @@ class LexiconEntry:
     sku: Optional[str] = None
     category: Optional[str] = None
 
+
 @dataclass
 class Span:
     text: str
     start: int  # character start
-    end: int    # character end (exclusive)
+    end: int  # character end (exclusive)
     label: str
     canonical: Optional[str] = None
     source: Optional[str] = None
@@ -150,12 +219,12 @@ def _tokenize(text: str) -> List[Tuple[str, int, int]]:
 
 def _tokenize_clean(text: str) -> Tuple[str, List[Tuple[str, int, int]]]:
     """Phase 3: Return cleaned text AND tokens with adjusted positions.
-    
+
     Returns:
         (cleaned_text, tokens) where tokens have positions relative to cleaned text
     """
     # Build mapping from original to cleaned positions
-    cleaned_text = EMOJI_PATTERN.sub(' ', text)
+    cleaned_text = EMOJI_PATTERN.sub(" ", text)
     tokens = []
     for m in WORD_PATTERN.finditer(cleaned_text):
         tokens.append((m.group(0), m.start(), m.end()))
@@ -175,7 +244,7 @@ def _jaccard_token_score(a: str, b: str) -> float:
 
 def detect_negated_regions(text: str, window: int = 5) -> List[Tuple[int, int]]:
     """Phase 3: Enhanced negation detection with forward/backward windows and prefix matching.
-    
+
     Forward window: negation precedes symptom (e.g., "no itching")
     Backward window: negation follows symptom (e.g., "itching absent")
     """
@@ -194,7 +263,7 @@ def detect_negated_regions(text: str, window: int = 5) -> List[Tuple[int, int]]:
                 neg_start = window_tokens[0][1]
                 neg_end = window_tokens[-1][2]
                 neg_spans.append((neg_start, neg_end))
-            
+
             # Backward window: previous N tokens (Phase 3: handle "symptom absent" pattern)
             back_tokens = tokens[max(0, i - window) : i]
             if back_tokens:
@@ -215,42 +284,46 @@ def _is_negated(span_start: int, span_end: int, neg_regions: List[Tuple[int, int
 
 def _deduplicate_spans(spans: List[Span]) -> List[Span]:
     """Remove exact duplicate spans (same start, end, canonical), keep highest confidence.
-    
+
     Preserves overlapping spans with different boundaries (e.g., 'rash' vs 'little rash')
     as they represent distinct contextual mentions, not redundancy.
     """
     if not spans:
         return []
-    
+
     # Group spans by (start, end, canonical) tuple
     from collections import defaultdict
+
     groups: Dict[Tuple[int, int, Optional[str]], List[Span]] = defaultdict(list)
     for span in spans:
         key = (span.start, span.end, span.canonical)
         groups[key].append(span)
-    
+
     # Keep highest confidence span from each group
     deduplicated = []
     for group_spans in groups.values():
         best = max(group_spans, key=lambda s: s.confidence)
         deduplicated.append(best)
-    
+
     # Sort by start position for consistent output
     deduplicated.sort(key=lambda s: s.start)
     return deduplicated
 
 
-def match_symptoms(text: str, lexicon: List[LexiconEntry],
-                   fuzzy_threshold: float = 88.0,
-                   max_term_words: int = 6,
-                   negation_window: int = 5,
-                   scorer: str = "wratio") -> List[Span]:
+def match_symptoms(
+    text: str,
+    lexicon: List[LexiconEntry],
+    fuzzy_threshold: float = 88.0,
+    max_term_words: int = 6,
+    negation_window: int = 5,
+    scorer: str = "wratio",
+) -> List[Span]:
     if not lexicon:
         return []
-    
+
     # Phase 3: Clean emojis for better matching, but keep original text for positions
-    text_for_matching = EMOJI_PATTERN.sub(' ', text)
-    
+    text_for_matching = EMOJI_PATTERN.sub(" ", text)
+
     tokens = _tokenize(text_for_matching)
     neg_regions = detect_negated_regions(text, window=negation_window)
     spans: List[Span] = []
@@ -261,11 +334,13 @@ def match_symptoms(text: str, lexicon: List[LexiconEntry],
     for e in lexicon:
         t = e.term.lower()
         toks = t.split()
-        term_meta.append({
-            "term": t,
-            "tok_len": len(toks),
-            "first": toks[0] if toks else "",
-        })
+        term_meta.append(
+            {
+                "term": t,
+                "tok_len": len(toks),
+                "first": toks[0] if toks else "",
+            }
+        )
     term_list = [m["term"] for m in term_meta]
     max_tok_len = max((m["tok_len"] for m in term_meta), default=0)
 
@@ -286,18 +361,26 @@ def match_symptoms(text: str, lexicon: List[LexiconEntry],
             if before_ok and after_ok:
                 negated = _is_negated(idx, end_idx, neg_regions)
                 # Extract from original text (not cleaned) for span text
-                spans.append(Span(
-                    text=text[idx:end_idx].strip(), start=idx, end=end_idx, label="SYMPTOM",
-                    canonical=entry.canonical, source=entry.source, concept_id=entry.concept_id,
-                    confidence=1.0, negated=negated
-                ))
+                spans.append(
+                    Span(
+                        text=text[idx:end_idx].strip(),
+                        start=idx,
+                        end=end_idx,
+                        label="SYMPTOM",
+                        canonical=entry.canonical,
+                        source=entry.source,
+                        concept_id=entry.concept_id,
+                        confidence=1.0,
+                        negated=negated,
+                    )
+                )
             idx = end_idx
 
     # Fuzzy single / multi-word matching by sliding window
     # Construct candidate windows up to max_term_words
     for window_size in range(1, max_term_words + 1):
         for i in range(0, len(tokens) - window_size + 1):
-            window_tokens = tokens[i:i+window_size]
+            window_tokens = tokens[i : i + window_size]
             phrase_tokens = [t[0].lower() for t in window_tokens]
             phrase_clean = " ".join(phrase_tokens)
             if phrase_clean in term_map:
@@ -314,14 +397,16 @@ def match_symptoms(text: str, lexicon: List[LexiconEntry],
             if not any(len(tok) > 3 for tok in phrase_tokens if tok not in STOPWORDS):
                 continue
             # Skip phrases spanning punctuation boundaries (comma/period/semicolon) to reduce drift
-            span_text = text[window_tokens[0][1]:window_tokens[-1][2]]
-            if any(p in span_text for p in [',',';','.']):
+            span_text = text[window_tokens[0][1] : window_tokens[-1][2]]
+            if any(p in span_text for p in [",", ";", "."]):
                 continue
             phrase_tok_len = len(phrase_tokens)
             # Candidates must share first token and have similar length
-            candidates = [m["term"] for m in term_meta
-                          if m["first"] == phrase_tokens[0]
-                          and abs(m["tok_len"] - phrase_tok_len) <= 1]
+            candidates = [
+                m["term"]
+                for m in term_meta
+                if m["first"] == phrase_tokens[0] and abs(m["tok_len"] - phrase_tok_len) <= 1
+            ]
             if not candidates:
                 continue
             # Ensure token overlap (non-stopword) with candidate before scoring
@@ -348,15 +433,14 @@ def match_symptoms(text: str, lexicon: List[LexiconEntry],
             if HAVE_RAPIDFUZZ:
                 if scorer == "jaccard":
                     best = process.extractOne(
-                        phrase_clean, filtered_candidates,
+                        phrase_clean,
+                        filtered_candidates,
                         scorer=lambda a, b: _jaccard_token_score(a, b),
-                        score_cutoff=cutoff
+                        score_cutoff=cutoff,
                     )
                 else:
                     best = process.extractOne(
-                        phrase_clean, filtered_candidates,
-                        scorer=fuzz.WRatio,
-                        score_cutoff=cutoff
+                        phrase_clean, filtered_candidates, scorer=fuzz.WRatio, score_cutoff=cutoff
                     )
                 if not best:
                     continue
@@ -382,39 +466,52 @@ def match_symptoms(text: str, lexicon: List[LexiconEntry],
             start = window_tokens[0][1]
             end = window_tokens[-1][2]
             negated = _is_negated(start, end, neg_regions)
-            spans.append(Span(
-                text=text[start:end], start=start, end=end, label="SYMPTOM",
-                canonical=entry.canonical, source=entry.source, concept_id=entry.concept_id,
-                confidence=min(1.0, (score/100.0)*0.8 + (jaccard/100.0)*0.2), negated=negated
-            ))
+            spans.append(
+                Span(
+                    text=text[start:end],
+                    start=start,
+                    end=end,
+                    label="SYMPTOM",
+                    canonical=entry.canonical,
+                    source=entry.source,
+                    concept_id=entry.concept_id,
+                    confidence=min(1.0, (score / 100.0) * 0.8 + (jaccard / 100.0) * 0.2),
+                    negated=negated,
+                )
+            )
 
     # Deduplicate exact duplicate spans, preserve overlapping contextual mentions
     return _deduplicate_spans(spans)
 
 
-def match_products(text: str, lexicon: List[LexiconEntry],
-                   fuzzy_threshold: float = 88.0,
-                   max_term_words: int = 6,
-                   scorer: str = "wratio") -> List[Span]:
+def match_products(
+    text: str,
+    lexicon: List[LexiconEntry],
+    fuzzy_threshold: float = 88.0,
+    max_term_words: int = 6,
+    scorer: str = "wratio",
+) -> List[Span]:
     if not lexicon:
         return []
     tokens = _tokenize(text)
     spans: List[Span] = []
-    
+
     # Build term map + metadata
     term_map = {e.term.lower(): e for e in lexicon}
     term_meta = []
     for e in lexicon:
         t = e.term.lower()
         toks = t.split()
-        term_meta.append({
-            "term": t,
-            "tok_len": len(toks),
-            "first": toks[0] if toks else "",
-        })
+        term_meta.append(
+            {
+                "term": t,
+                "tok_len": len(toks),
+                "first": toks[0] if toks else "",
+            }
+        )
     term_list = [m["term"] for m in term_meta]
     max_tok_len = max((m["tok_len"] for m in term_meta), default=0)
-    
+
     # Exact phrase matching
     lower_text = text.lower()
     for entry in lexicon:
@@ -428,17 +525,25 @@ def match_products(text: str, lexicon: List[LexiconEntry],
             before_ok = idx == 0 or not lower_text[idx - 1].isalnum()
             after_ok = end_idx == len(lower_text) or not lower_text[end_idx].isalnum()
             if before_ok and after_ok:
-                spans.append(Span(
-                    text=text[idx:end_idx], start=idx, end=end_idx, label="PRODUCT",
-                    canonical=entry.canonical, source=entry.source, sku=entry.sku,
-                    category=entry.category, confidence=1.0
-                ))
+                spans.append(
+                    Span(
+                        text=text[idx:end_idx],
+                        start=idx,
+                        end=end_idx,
+                        label="PRODUCT",
+                        canonical=entry.canonical,
+                        source=entry.source,
+                        sku=entry.sku,
+                        category=entry.category,
+                        confidence=1.0,
+                    )
+                )
             idx = end_idx
-    
+
     # Fuzzy matching
     for window_size in range(1, max_term_words + 1):
         for i in range(0, len(tokens) - window_size + 1):
-            window_tokens = tokens[i:i+window_size]
+            window_tokens = tokens[i : i + window_size]
             phrase_tokens = [t[0].lower() for t in window_tokens]
             phrase_clean = " ".join(phrase_tokens)
             if phrase_clean in term_map:
@@ -451,13 +556,15 @@ def match_products(text: str, lexicon: List[LexiconEntry],
                 continue
             if not any(len(tok) > 3 for tok in phrase_tokens if tok not in STOPWORDS):
                 continue
-            span_text = text[window_tokens[0][1]:window_tokens[-1][2]]
-            if any(p in span_text for p in [',',';','.']):
+            span_text = text[window_tokens[0][1] : window_tokens[-1][2]]
+            if any(p in span_text for p in [",", ";", "."]):
                 continue
             phrase_tok_len = len(phrase_tokens)
-            candidates = [m["term"] for m in term_meta
-                          if m["first"] == phrase_tokens[0]
-                          and abs(m["tok_len"] - phrase_tok_len) <= 1]
+            candidates = [
+                m["term"]
+                for m in term_meta
+                if m["first"] == phrase_tokens[0] and abs(m["tok_len"] - phrase_tok_len) <= 1
+            ]
             if not candidates:
                 continue
             content_phrase = {tok for tok in phrase_tokens if tok not in STOPWORDS}
@@ -480,15 +587,14 @@ def match_products(text: str, lexicon: List[LexiconEntry],
             if HAVE_RAPIDFUZZ:
                 if scorer == "jaccard":
                     best = process.extractOne(
-                        phrase_clean, filtered_candidates,
+                        phrase_clean,
+                        filtered_candidates,
                         scorer=lambda a, b: _jaccard_token_score(a, b),
-                        score_cutoff=cutoff
+                        score_cutoff=cutoff,
                     )
                 else:
                     best = process.extractOne(
-                        phrase_clean, filtered_candidates,
-                        scorer=fuzz.WRatio,
-                        score_cutoff=cutoff
+                        phrase_clean, filtered_candidates, scorer=fuzz.WRatio, score_cutoff=cutoff
                     )
                 if not best:
                     continue
@@ -512,12 +618,20 @@ def match_products(text: str, lexicon: List[LexiconEntry],
             entry = term_map[matched_term]
             start = window_tokens[0][1]
             end = window_tokens[-1][2]
-            spans.append(Span(
-                text=text[start:end], start=start, end=end, label="PRODUCT",
-                canonical=entry.canonical, source=entry.source, sku=entry.sku,
-                category=entry.category, confidence=min(1.0, (score/100.0)*0.8 + (jaccard/100.0)*0.2)
-            ))
-    
+            spans.append(
+                Span(
+                    text=text[start:end],
+                    start=start,
+                    end=end,
+                    label="PRODUCT",
+                    canonical=entry.canonical,
+                    source=entry.source,
+                    sku=entry.sku,
+                    category=entry.category,
+                    confidence=min(1.0, (score / 100.0) * 0.8 + (jaccard / 100.0) * 0.2),
+                )
+            )
+
     # Deduplicate exact duplicate spans, preserve overlapping contextual mentions
     return _deduplicate_spans(spans)
 
@@ -526,23 +640,33 @@ def assemble_spans(symptom_spans: List[Span], product_spans: List[Span]) -> List
     return symptom_spans + product_spans
 
 
-def weak_label(text: str, symptom_lexicon: List[LexiconEntry],
-               product_lexicon: List[LexiconEntry],
-               negation_window: int = 5,
-               scorer: str = "wratio") -> List[Span]:
-    symptom_spans = match_symptoms(text, symptom_lexicon, negation_window=negation_window, scorer=scorer)
+def weak_label(
+    text: str,
+    symptom_lexicon: List[LexiconEntry],
+    product_lexicon: List[LexiconEntry],
+    negation_window: int = 5,
+    scorer: str = "wratio",
+) -> List[Span]:
+    symptom_spans = match_symptoms(
+        text, symptom_lexicon, negation_window=negation_window, scorer=scorer
+    )
     product_spans = match_products(text, product_lexicon, scorer=scorer)
     return assemble_spans(symptom_spans, product_spans)
 
 
-def weak_label_batch(texts: List[str], symptom_lexicon: List[LexiconEntry],
-                     product_lexicon: List[LexiconEntry],
-                     negation_window: int = 5,
-                     scorer: str = "wratio") -> List[List[Span]]:
+def weak_label_batch(
+    texts: List[str],
+    symptom_lexicon: List[LexiconEntry],
+    product_lexicon: List[LexiconEntry],
+    negation_window: int = 5,
+    scorer: str = "wratio",
+) -> List[List[Span]]:
     return [weak_label(t, symptom_lexicon, product_lexicon, negation_window, scorer) for t in texts]
 
 
-def persist_weak_labels_jsonl(texts: List[str], spans_batch: List[List[Span]], output_path: Path) -> None:
+def persist_weak_labels_jsonl(
+    texts: List[str], spans_batch: List[List[Span]], output_path: Path
+) -> None:
     """Persist weak labels to JSONL for annotation triage."""
     with output_path.open("w", encoding="utf-8") as f:
         for text, spans in zip(texts, spans_batch):
@@ -561,7 +685,8 @@ def persist_weak_labels_jsonl(texts: List[str], spans_batch: List[List[Span]], o
                         "category": s.category,
                         "confidence": s.confidence,
                         "negated": s.negated,
-                    } for s in spans
-                ]
+                    }
+                    for s in spans
+                ],
             }
             f.write(json.dumps(record, ensure_ascii=False) + "\n")

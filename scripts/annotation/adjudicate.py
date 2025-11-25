@@ -12,10 +12,11 @@ Usage:
   python scripts/annotation/adjudicate.py --inputs gold_a.jsonl gold_b.jsonl --out data/annotation/exports/gold_consensus.jsonl --conflicts data/annotation/conflicts/conflicts.json
 """
 from __future__ import annotations
+
 import argparse
 import json
-from pathlib import Path
 from collections import Counter, defaultdict
+from pathlib import Path
 
 
 def read_jsonl(path: Path):
@@ -52,21 +53,29 @@ def detect_conflicts(spans_list):
     conflicts = []
     sorted_spans = sorted(all_spans, key=lambda e: e["start"])
     for i in range(len(sorted_spans)):
-        for j in range(i+1, len(sorted_spans)):
-            a = sorted_spans[i]; b = sorted_spans[j]
+        for j in range(i + 1, len(sorted_spans)):
+            a = sorted_spans[i]
+            b = sorted_spans[j]
             if b["start"] >= a["end"]:
                 break
-            if min(a["end"], b["end"]) - max(a["start"], b["start"]) > 0 and a["label"] != b["label"]:
+            if (
+                min(a["end"], b["end"]) - max(a["start"], b["start"]) > 0
+                and a["label"] != b["label"]
+            ):
                 conflicts.append({"task_id": None, "span_a": a, "span_b": b})
     return conflicts
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Adjudicate multiple gold JSONL files into consensus")
+    parser = argparse.ArgumentParser(
+        description="Adjudicate multiple gold JSONL files into consensus"
+    )
     parser.add_argument("--inputs", nargs="+", required=True, help="List of gold JSONL files")
     parser.add_argument("--out", required=True, help="Consensus output JSONL path")
     parser.add_argument("--conflicts", required=True, help="Conflicts JSON path")
-    parser.add_argument("--min-agree", type=int, default=2, help="Minimum annotator agreement for inclusion")
+    parser.add_argument(
+        "--min-agree", type=int, default=2, help="Minimum annotator agreement for inclusion"
+    )
     args = parser.parse_args()
 
     input_paths = [Path(p) for p in args.inputs]
@@ -95,11 +104,19 @@ def main():
                 c["task_id"] = tid
             if conflicts:
                 conflict_records.extend(conflicts)
-            record = {"id": tid, "text": text, "entities": consensus, "annotators": [r.get("annotator") for r in recs], "min_agree": args.min_agree}
+            record = {
+                "id": tid,
+                "text": text,
+                "entities": consensus,
+                "annotators": [r.get("annotator") for r in recs],
+                "min_agree": args.min_agree,
+            }
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             written += 1
 
-    conflicts_path.write_text(json.dumps(conflict_records, ensure_ascii=False, indent=2), encoding="utf-8")
+    conflicts_path.write_text(
+        json.dumps(conflict_records, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     print(f"Consensus written for {written} tasks -> {out_path}")
     print(f"Conflicts: {len(conflict_records)} -> {conflicts_path}")
 

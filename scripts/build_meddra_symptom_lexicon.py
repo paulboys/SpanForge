@@ -21,43 +21,49 @@ Output columns:
 NOTE: Script will not ship MedDRA data. You must supply licensed PT list.
 """
 from __future__ import annotations
-import csv
+
 import argparse
+import csv
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+
 def read_pt_file(path: Path) -> Dict[str, str]:
     mapping: Dict[str, str] = {}
-    with path.open('r', encoding='utf-8') as f:
+    with path.open("r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            pt_name = row.get('pt_name', '').strip()
-            pt_code = row.get('pt_code', '').strip()
+            pt_name = row.get("pt_name", "").strip()
+            pt_code = row.get("pt_code", "").strip()
             if not pt_name:
                 continue
             mapping[pt_name] = pt_code
     return mapping
 
+
 def read_synonyms(path: Path) -> List[Tuple[str, str]]:
     pairs: List[Tuple[str, str]] = []
-    with path.open('r', encoding='utf-8') as f:
+    with path.open("r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            syn = row.get('synonym', '').strip()
-            pt_name = row.get('pt_name', '').strip()
+            syn = row.get("synonym", "").strip()
+            pt_name = row.get("pt_name", "").strip()
             if syn and pt_name:
                 pairs.append((syn, pt_name))
     return pairs
 
-def build_rows(pt_map: Dict[str, str], syn_pairs: List[Tuple[str, str]]) -> List[Tuple[str, str, str, str]]:
+
+def build_rows(
+    pt_map: Dict[str, str], syn_pairs: List[Tuple[str, str]]
+) -> List[Tuple[str, str, str, str]]:
     rows: List[Tuple[str, str, str, str]] = []
     # Add PTs themselves as canonical terms
     for pt_name, pt_code in pt_map.items():
-        rows.append((pt_name, pt_name, 'meddra_pt', pt_code))
+        rows.append((pt_name, pt_name, "meddra_pt", pt_code))
     # Add synonyms referencing PT
     for syn, pt_name in syn_pairs:
-        pt_code = pt_map.get(pt_name, '')
-        rows.append((syn, pt_name, 'user_syn', pt_code))
+        pt_code = pt_map.get(pt_name, "")
+        rows.append((syn, pt_name, "user_syn", pt_code))
     # Deduplicate by (term, canonical)
     dedup: Dict[Tuple[str, str], Tuple[str, str, str, str]] = {}
     for term, canonical, source, code in rows:
@@ -71,19 +77,27 @@ def build_rows(pt_map: Dict[str, str], syn_pairs: List[Tuple[str, str]]) -> List
                 dedup[key] = (term, canonical, source, code)
     return list(dedup.values())
 
+
 def write_output(rows: List[Tuple[str, str, str, str]], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('w', encoding='utf-8', newline='') as f:
+    with path.open("w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(['term','canonical','source','concept_id'])
-        for term, canonical, source, code in sorted(rows, key=lambda r: (r[1].lower(), r[0].lower())):
+        writer.writerow(["term", "canonical", "source", "concept_id"])
+        for term, canonical, source, code in sorted(
+            rows, key=lambda r: (r[1].lower(), r[0].lower())
+        ):
             writer.writerow([term, canonical, source, code])
+
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--pt-file', required=True, type=Path, help='CSV with MedDRA PT list (pt_name, pt_code)')
-    ap.add_argument('--syn-file', required=True, type=Path, help='CSV with synonym mappings (synonym, pt_name)')
-    ap.add_argument('--out-file', required=True, type=Path, help='Destination CSV lexicon path')
+    ap.add_argument(
+        "--pt-file", required=True, type=Path, help="CSV with MedDRA PT list (pt_name, pt_code)"
+    )
+    ap.add_argument(
+        "--syn-file", required=True, type=Path, help="CSV with synonym mappings (synonym, pt_name)"
+    )
+    ap.add_argument("--out-file", required=True, type=Path, help="Destination CSV lexicon path")
     args = ap.parse_args()
 
     if not args.pt_file.exists():
@@ -102,5 +116,6 @@ def main():
     write_output(rows, args.out_file)
     print(f"Wrote {len(rows)} rows -> {args.out_file}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

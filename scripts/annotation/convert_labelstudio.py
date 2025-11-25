@@ -45,14 +45,19 @@ Enhancements:
 - Retains only ALLOWED_LABELS; first annotation used (extend later for adjudication/consensus).
 """
 from __future__ import annotations
+
 import argparse
 import json
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 # Reuse lexicon loaders for canonical + concept_id enrichment
 try:  # Import inside script to avoid circular issues if run standalone
-    from src.weak_label import load_symptom_lexicon, load_product_lexicon, LexiconEntry  # type: ignore
+    from src.weak_label import (  # type: ignore
+        LexiconEntry,
+        load_product_lexicon,
+        load_symptom_lexicon,
+    )
 except ImportError:
     load_symptom_lexicon = None  # type: ignore
     load_product_lexicon = None  # type: ignore
@@ -106,7 +111,11 @@ def _build_lookup(entries: List["LexiconEntry"]) -> Dict[str, "LexiconEntry"]:
     return lookup
 
 
-def _enrich_entity(ent: Dict[str, Any], symptom_lookup: Dict[str, "LexiconEntry"], product_lookup: Dict[str, "LexiconEntry"]) -> Dict[str, Any]:
+def _enrich_entity(
+    ent: Dict[str, Any],
+    symptom_lookup: Dict[str, "LexiconEntry"],
+    product_lookup: Dict[str, "LexiconEntry"],
+) -> Dict[str, Any]:
     label = ent["label"]
     raw_text = ent["text"].strip()
     key = raw_text.lower()
@@ -129,14 +138,33 @@ def _enrich_entity(ent: Dict[str, Any], symptom_lookup: Dict[str, "LexiconEntry"
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert Label Studio export to gold JSONL with provenance & canonical enrichment")
+    parser = argparse.ArgumentParser(
+        description="Convert Label Studio export to gold JSONL with provenance & canonical enrichment"
+    )
     parser.add_argument("--input", required=True, help="Path to Label Studio JSON export file")
     parser.add_argument("--output", required=True, help="Path to output gold JSONL file")
-    parser.add_argument("--source", required=True, help="Source batch identifier for provenance (e.g., complaints_batch_2025Q4)")
+    parser.add_argument(
+        "--source",
+        required=True,
+        help="Source batch identifier for provenance (e.g., complaints_batch_2025Q4)",
+    )
     parser.add_argument("--annotator", required=True, help="Primary annotator ID or name")
-    parser.add_argument("--revision", type=int, default=None, help="Optional revision number for re-annotated batches")
-    parser.add_argument("--symptom-lexicon", default=None, help="Optional path to symptom lexicon CSV for canonical mapping")
-    parser.add_argument("--product-lexicon", default=None, help="Optional path to product lexicon CSV for canonical mapping")
+    parser.add_argument(
+        "--revision",
+        type=int,
+        default=None,
+        help="Optional revision number for re-annotated batches",
+    )
+    parser.add_argument(
+        "--symptom-lexicon",
+        default=None,
+        help="Optional path to symptom lexicon CSV for canonical mapping",
+    )
+    parser.add_argument(
+        "--product-lexicon",
+        default=None,
+        help="Optional path to product lexicon CSV for canonical mapping",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -163,10 +191,7 @@ def main():
             if not text:
                 continue
             entities = extract_entities(task)
-            enriched = [
-                _enrich_entity(e, symptom_lookup, product_lookup)
-                for e in entities
-            ]
+            enriched = [_enrich_entity(e, symptom_lookup, product_lookup) for e in entities]
             record = {
                 "id": task.get("id"),
                 "text": text,
@@ -178,7 +203,9 @@ def main():
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             count += 1
 
-    print(f"Converted {count} tasks to {output_path} (source={args.source}, annotator={args.annotator})")
+    print(
+        f"Converted {count} tasks to {output_path} (source={args.source}, annotator={args.annotator})"
+    )
 
 
 if __name__ == "__main__":

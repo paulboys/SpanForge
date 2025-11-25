@@ -18,13 +18,30 @@ SAMPLE_SYMPTOMS = [
 ]
 
 SAMPLE_PRODUCTS = [
-    {"term": "moisturizing cream", "canonical": "Hydra Boost Moisturizing Cream", "sku": "SKU-1001", "category": "skincare"},
-    {"term": "face wash", "canonical": "Gentle Daily Cleanser", "sku": "SKU-1002", "category": "skincare"},
-    {"term": "serum", "canonical": "Radiance Vitamin C Serum", "sku": "SKU-1003", "category": "skincare"},
+    {
+        "term": "moisturizing cream",
+        "canonical": "Hydra Boost Moisturizing Cream",
+        "sku": "SKU-1001",
+        "category": "skincare",
+    },
+    {
+        "term": "face wash",
+        "canonical": "Gentle Daily Cleanser",
+        "sku": "SKU-1002",
+        "category": "skincare",
+    },
+    {
+        "term": "serum",
+        "canonical": "Radiance Vitamin C Serum",
+        "sku": "SKU-1003",
+        "category": "skincare",
+    },
 ]
+
 
 def ensure_output_dir():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def write_sample():
     ensure_output_dir()
@@ -35,7 +52,7 @@ def write_sample():
         for row in SAMPLE_SYMPTOMS:
             writer.writerow(row)
     print(f"Wrote sample symptom lexicon to {SYMPTOM_FILE}")
-    
+
     # Write products
     with PRODUCT_FILE.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["term", "canonical", "sku", "category"])
@@ -43,6 +60,7 @@ def write_sample():
         for row in SAMPLE_PRODUCTS:
             writer.writerow(row)
     print(f"Wrote sample product lexicon to {PRODUCT_FILE}")
+
 
 if __name__ == "__main__":
     write_sample()
