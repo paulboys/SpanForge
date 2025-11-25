@@ -1,77 +1,145 @@
+"""Overlap and deduplication tests with OverlapChecker composition.
+
+Tests span deduplication logic, exact duplicate removal, contextual mention
+preservation, and parametrized overlap scenarios.
+"""
 from pathlib import Path
 import sys
 import pathlib
+import pytest
+import unittest
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.weak_label import load_symptom_lexicon, load_product_lexicon, weak_label, _deduplicate_spans, Span
+from tests.base import WeakLabelTestBase
+from tests.assertions import OverlapChecker, SpanAsserter
 
 
-def test_deduplication_preserves_overlapping_contextual_mentions():
-    """Verify that overlapping spans with different boundaries are preserved (e.g., 'rash' vs 'little rash').
-    Only exact duplicates (same start, end, canonical) should be removed.
-    """
-    symptom_lex_path = Path("data/lexicon/symptoms.csv")
-    product_lex_path = Path("data/lexicon/products.csv")
-    symptom_lexicon = load_symptom_lexicon(symptom_lex_path)
-    product_lexicon = load_product_lexicon(product_lex_path)
+class TestSpanDeduplication(WeakLabelTestBase):
+    """Test span deduplication and overlap handling."""
     
-    # Text with entities that could generate overlapping fuzzy matches
-    text = "I got a terrible headache after using the moisturizing cream."
-    spans = weak_label(text, symptom_lexicon, product_lexicon)
+    def setUp(self):
+        super().setUp()
+        self.overlap_checker = OverlapChecker(self)
+        self.span_asserter = SpanAsserter(self)
     
-    # Should find multiple contextual mentions for same canonical entities
-    # e.g., "headache" (exact) and "terrible headache" (fuzzy window)
-    # e.g., "moisturizing cream" (exact) and "the moisturizing cream" (fuzzy window)
-    assert len(spans) >= 2, f"Expected at least 2 spans, got {len(spans)}"
+    def test_exact_duplicates_removed(self):
+        """Verify exact duplicates (same start, end, canonical) are removed, keeping highest confidence."""
+        spans = [
+            Span(text="rash", start=10, end=14, label="SYMPTOM", 
+                 canonical="Skin Rash", confidence=0.9),
+            Span(text="rash", start=10, end=14, label="SYMPTOM", 
+                 canonical="Skin Rash", confidence=1.0),  # duplicate, higher conf
+            Span(text="rash", start=10, end=14, label="SYMPTOM", 
+                 canonical="Skin Rash", confidence=0.8),  # duplicate, lower conf
+            Span(text="severe rash", start=3, end=14, label="SYMPTOM", 
+                 canonical="Skin Rash", confidence=0.95),  # different boundary
+        ]
+        
+        deduplicated = _deduplicate_spans(spans)
+        
+        # Should have 2 spans: best of 3 duplicates + different boundary
+        self.assertEqual(len(deduplicated), 2, 
+                        f"Expected 2 spans after deduplication, got {len(deduplicated)}")
+        
+        # Verify highest confidence kept for exact duplicates
+        exact_match = next((s for s in deduplicated if s.start == 10 and s.end == 14), None)
+        self.assertIsNotNone(exact_match, "Exact match span missing")
+        self.assertEqual(exact_match.confidence, 1.0, 
+                        f"Expected confidence 1.0 for kept duplicate, got {exact_match.confidence}")
+        
+        # Verify overlapping span with different boundary preserved
+        overlapping = next((s for s in deduplicated if s.start == 3 and s.end == 14), None)
+        self.assertIsNotNone(overlapping, "Overlapping contextual mention missing")
+        self.assertEqual(overlapping.text, "severe rash", 
+                        f"Expected 'severe rash', got '{overlapping.text}'")
     
-    # Verify no exact duplicates (same start, end, canonical)
-    seen_keys = set()
-    for span in spans:
-        key = (span.start, span.end, span.canonical)
-        assert key not in seen_keys, f"Exact duplicate detected: {span.text} at [{span.start}-{span.end}] -> {span.canonical}"
-        seen_keys.add(key)
-    
-    # Verify overlapping contextual mentions are preserved
-    # Find spans with same canonical but different boundaries
-    canonical_groups = {}
-    for span in spans:
-        if span.canonical not in canonical_groups:
-            canonical_groups[span.canonical] = []
-        canonical_groups[span.canonical].append(span)
-    
-    # Check for overlapping spans within same canonical group (this is OK and expected)
-    for canonical, group in canonical_groups.items():
-        if len(group) > 1:
-            # Verify they have different boundaries
-            positions = [(s.start, s.end) for s in group]
-            assert len(set(positions)) == len(positions), f"Same canonical with duplicate positions: {canonical}"
-            # This is the key behavior: overlapping spans with different boundaries are preserved
-            print(f"✓ Preserved {len(group)} contextual mentions for '{canonical}': {[s.text for s in group]}")
+    def test_contextual_mentions_preserved(self):
+        """Verify overlapping spans with different boundaries are preserved."""
+        symptom_lexicon = self.create_symptom_lexicon()
+        product_lexicon = self.create_product_lexicon()
+        
+        text = "I got a terrible headache after using the moisturizing cream."
+        spans = weak_label(text, symptom_lexicon, product_lexicon)
+        
+        self.assertGreaterEqual(len(spans), 2, f"Expected at least 2 spans, got {len(spans)}")
+        
+        # Verify no exact duplicates (same start, end, canonical)
+        self.span_asserter.assert_no_duplicate_spans(
+            [{"start": s.start, "end": s.end, "label": s.label, "canonical": s.canonical} 
+             for s in spans]
+        )
+        
+        # Group by canonical to find contextual variations
+        canonical_groups = {}
+        for span in spans:
+            if span.canonical not in canonical_groups:
+                canonical_groups[span.canonical] = []
+            canonical_groups[span.canonical].append(span)
+        
+        # Check for overlapping spans within same canonical group
+        for canonical, group in canonical_groups.items():
+            if len(group) > 1:
+                # Verify different boundaries
+                positions = [(s.start, s.end) for s in group]
+                self.assertEqual(len(set(positions)), len(positions), 
+                               f"Same canonical with duplicate positions: {canonical}")
 
 
-def test_exact_duplicates_removed():
-    """Verify that exact duplicates (same start, end, canonical) are removed, keeping highest confidence."""
-    # Create test spans with exact duplicates
-    spans = [
-        Span(text="rash", start=10, end=14, label="SYMPTOM", canonical="Skin Rash", confidence=0.9),
-        Span(text="rash", start=10, end=14, label="SYMPTOM", canonical="Skin Rash", confidence=1.0),  # duplicate, higher conf
-        Span(text="rash", start=10, end=14, label="SYMPTOM", canonical="Skin Rash", confidence=0.8),  # duplicate, lower conf
-        Span(text="severe rash", start=3, end=14, label="SYMPTOM", canonical="Skin Rash", confidence=0.95),  # different boundary
-    ]
+@pytest.mark.parametrize("span_a,span_b,expected_overlap,expected_iou", [
+    # Adjacent (no overlap)
+    ({"start": 0, "end": 5}, {"start": 6, "end": 10}, 0, 0.0),
     
-    deduplicated = _deduplicate_spans(spans)
+    # Exact overlap
+    ({"start": 10, "end": 20}, {"start": 10, "end": 20}, 10, 1.0),
     
-    # Should have 2 spans: best of the 3 duplicates + the one with different boundary
-    assert len(deduplicated) == 2, f"Expected 2 spans after deduplication, got {len(deduplicated)}"
+    # Nested (A contains B)
+    ({"start": 10, "end": 30}, {"start": 15, "end": 25}, 10, 0.5),
     
-    # Verify highest confidence kept for exact duplicates
-    exact_match = next((s for s in deduplicated if s.start == 10 and s.end == 14), None)
-    assert exact_match is not None, "Exact match span missing"
-    assert exact_match.confidence == 1.0, f"Expected confidence 1.0 for kept duplicate, got {exact_match.confidence}"
+    # Partial overlap (IOU = 5 / (15+15-5) = 5/25 = 0.2)
+    ({"start": 10, "end": 25}, {"start": 20, "end": 35}, 5, 0.2),
     
-    # Verify overlapping span with different boundary preserved
-    overlapping = next((s for s in deduplicated if s.start == 3 and s.end == 14), None)
-    assert overlapping is not None, "Overlapping contextual mention missing"
-    assert overlapping.text == "severe rash", f"Expected 'severe rash', got '{overlapping.text}'"
+    # Disjoint
+    ({"start": 0, "end": 10}, {"start": 20, "end": 30}, 0, 0.0),
+])
+def test_overlap_computation(span_a, span_b, expected_overlap, expected_iou):
+    """Parametrized test for overlap and IOU computation."""
+    test_case = unittest.TestCase()
+    test_case.setUp = lambda: None
+    checker = OverlapChecker(test_case)
+    
+    actual_overlap = checker.compute_overlap(span_a, span_b)
+    actual_iou = checker.compute_iou(span_a, span_b)
+    
+    assert actual_overlap == expected_overlap, \
+        f"Expected overlap {expected_overlap}, got {actual_overlap}"
+    assert abs(actual_iou - expected_iou) < 0.01, \
+        f"Expected IOU {expected_iou}, got {actual_iou}"
+
+
+class TestConflictingLabels(unittest.TestCase):
+    """Test overlap conflict detection."""
+    
+    def setUp(self):
+        self.overlap_checker = OverlapChecker(self)
+    
+    def test_same_label_overlap_allowed(self):
+        """Verify overlapping spans with same label don't raise conflict."""
+        spans = [
+            {"start": 10, "end": 30, "label": "SYMPTOM"},
+            {"start": 20, "end": 35, "label": "SYMPTOM"},
+        ]
+        # Should not raise
+        self.overlap_checker.assert_no_conflicting_labels(spans)
+    
+    def test_different_label_overlap_raises(self):
+        """Verify overlapping spans with different labels raise conflict."""
+        spans = [
+            {"start": 10, "end": 30, "label": "SYMPTOM"},
+            {"start": 20, "end": 35, "label": "PRODUCT"},
+        ]
+        with self.assertRaises(AssertionError):
+            self.overlap_checker.assert_no_conflicting_labels(spans)
