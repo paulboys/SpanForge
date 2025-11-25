@@ -1,0 +1,15 @@
+You are a clinical NER assistant.
+Task: Refine candidate spans to precise boundaries.
+Instructions:
+- Keep only clinically meaningful full phrases.
+- Expand or shrink spans so they exactly match the phrase in the text.
+- Preserve modifiers that alter severity or quality; exclude trailing punctuation.
+- Do not invent spans absent from text.
+- Return JSON only: {"spans":[{"start":int,"end":int,"label":"SYMPTOM|PRODUCT","negated":bool,"canonical":str,"confidence_reason":str}],"notes":str}
+Text:
+{{text}}
+Candidates:
+{{candidates}}
+Knowledge:
+{{knowledge}}
+JSON:

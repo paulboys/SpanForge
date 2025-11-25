@@ -25,6 +25,7 @@ SUBCMDS = {
     "quality": "quality_report.py",
     "adjudicate": "adjudicate.py",
     "register": "register_batch.py",
+  "refine-llm": "refine_llm.py",
 }
 
 

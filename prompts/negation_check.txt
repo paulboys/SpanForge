@@ -1,0 +1,12 @@
+You are a clinical NER assistant.
+Task: Determine negation status for each candidate span.
+Rules:
+- A span is negated if context expresses its absence (e.g., "no rash", "without headache").
+- Ignore hypothetical or future mentions.
+- Do not alter boundaries.
+Return JSON only with same schema as boundary_refine.
+Text:
+{{text}}
+Candidates:
+{{candidates}}
+JSON:

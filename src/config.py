@@ -15,6 +15,13 @@ class AppConfig(BaseSettings):
     seed: int = 42
     negation_window: int = 5  # tokens after negation word to mark as negated
     fuzzy_scorer: str = "wratio"  # options: wratio, jaccard
+    # LLM refinement (experimental)
+    llm_enabled: bool = False
+    llm_provider: str = "stub"  # e.g. openai, azure, anthropic
+    llm_model: str = "gpt-4"    # placeholder model name
+    llm_min_confidence: float = 0.65  # discard suggestions below this
+    llm_cache_path: str = "data/annotation/exports/llm_cache.jsonl"
+    llm_prompt_version: str = "v1"
 
 def get_config() -> AppConfig:
     return AppConfig()
