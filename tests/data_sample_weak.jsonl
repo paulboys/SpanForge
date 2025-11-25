@@ -1,0 +1,1 @@
+{"text": "I had a mild rash and slight headache after using the cream.", "spans": [{"text": "rash", "start": 12, "end": 16, "label": "SYMPTOM", "confidence": 0.6}, {"text": "headache", "start": 28, "end": 36, "label": "SYMPTOM", "confidence": 0.9}, {"text": "cream", "start": 53, "end": 58, "label": "PRODUCT", "confidence": 0.72}]}

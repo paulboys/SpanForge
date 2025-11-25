@@ -152,7 +152,7 @@ def test_overlap_patterns(span_a, span_b, expected_overlap, expected_conflict):
     (0.5, {"start": 10, "end": 20}, {"start": 12, "end": 22}, True),  # Partial overlap, IOU=0.6
     (0.5, {"start": 10, "end": 20}, {"start": 15, "end": 25}, False), # Partial overlap, IOU=0.33
     (0.5, {"start": 10, "end": 20}, {"start": 25, "end": 35}, False), # No overlap, IOU=0.0
-    (0.8, {"start": 10, "end": 20}, {"start": 11, "end": 19}, False), # Nested, IOU=0.72
+    (0.8, {"start": 10, "end": 20}, {"start": 11, "end": 19}, True),  # Nested, IOU=0.8 (exact boundary)
     (0.8, {"start": 10, "end": 20}, {"start": 10, "end": 19}, True),  # Subset, IOU=0.9
 ])
 def test_iou_thresholds(iou_threshold, span_a, span_b, should_match):

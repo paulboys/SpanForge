@@ -194,15 +194,19 @@ class IntegrityValidator:
             self.tc.assertTrue(ent.get('canonical'), f"Empty 'canonical' in entity: {ent}")
     
     def assert_labels_valid(self, entities: List[Dict[str, Any]]):
-        """Assert all entity labels are in allowed set.
+        """Assert all entity labels are in allowed set and text is non-empty.
         
         Args:
             entities: List of entity dicts
         """
         for ent in entities:
             label = ent.get('label')
+            text = ent.get('text', '')
+            
             self.tc.assertIn(label, self.ALLOWED_LABELS,
                             f"Invalid label '{label}' in entity: {ent}")
+            self.tc.assertTrue(len(text) > 0,
+                             f"Empty text in entity: {ent}")
     
     def assert_no_duplicates(self, entities: List[Dict[str, Any]]):
         """Assert no duplicate entities (same start, end, label).
@@ -233,9 +237,19 @@ class IntegrityValidator:
         
         Args:
             record: Gold record dict
+            
+        Raises:
+            KeyError: If required fields (text, entities) are missing
+            AssertionError: If validation checks fail
         """
-        text = record.get('text', '')
-        entities = record.get('entities', [])
+        # Check required fields first (raises KeyError if missing)
+        if 'text' not in record:
+            raise KeyError("Missing required field 'text'")
+        if 'entities' not in record:
+            raise KeyError("Missing required field 'entities'")
+            
+        text = record['text']
+        entities = record['entities']
         
         self.assert_provenance_present(record)
         self.assert_canonical_present(entities)

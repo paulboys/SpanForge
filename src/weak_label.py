@@ -12,8 +12,29 @@ except ImportError:  # Fallback to difflib if rapidfuzz unavailable at runtime
     import difflib
     HAVE_RAPIDFUZZ = False
 
-NEGATION_TOKENS = {"no", "not", "without", "never", "none", "n't"}
+# Expanded negation cue list (Phase 3)
+NEGATION_TOKENS = {
+    "no", "not", "without", "never", "none", "n't",
+    "absent", "denies", "denied", "deny", "negative",
+    "unremarkable", "resolv", "cleared", "improved"
+}
 WORD_PATTERN = re.compile(r"\b\w[\w\-']*\b")
+# Emoji pattern for detection (Phase 3 - improved unicode handling)
+EMOJI_PATTERN = re.compile(
+    "["
+    "\U0001F600-\U0001F64F"  # emoticons
+    "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "\U0001F680-\U0001F6FF"  # transport & map symbols
+    "\U0001F700-\U0001F77F"  # alchemical symbols
+    "\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+    "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+    "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+    "\U0001FA00-\U0001FA6F"  # Chess Symbols
+    "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+    "\U00002702-\U000027B0"  # Dingbats
+    "\U000024C2-\U0001F251" 
+    "]+", flags=re.UNICODE
+)
 STOPWORDS = {
     "i","a","an","the","and","or","to","for","of","in","on","at","but","so","with","after","before","from","my","me","we","our","this","that","it","is","was","are","were"
 }
@@ -91,10 +112,25 @@ def load_product_lexicon(path: Path) -> List[LexiconEntry]:
 
 
 def _tokenize(text: str) -> List[Tuple[str, int, int]]:
+    """Tokenize text and return (token, start, end) tuples using original positions."""
     tokens = []
     for m in WORD_PATTERN.finditer(text):
         tokens.append((m.group(0), m.start(), m.end()))
     return tokens
+
+
+def _tokenize_clean(text: str) -> Tuple[str, List[Tuple[str, int, int]]]:
+    """Phase 3: Return cleaned text AND tokens with adjusted positions.
+    
+    Returns:
+        (cleaned_text, tokens) where tokens have positions relative to cleaned text
+    """
+    # Build mapping from original to cleaned positions
+    cleaned_text = EMOJI_PATTERN.sub(' ', text)
+    tokens = []
+    for m in WORD_PATTERN.finditer(cleaned_text):
+        tokens.append((m.group(0), m.start(), m.end()))
+    return cleaned_text, tokens
 
 
 def _jaccard_token_score(a: str, b: str) -> float:
@@ -109,16 +145,33 @@ def _jaccard_token_score(a: str, b: str) -> float:
 
 
 def detect_negated_regions(text: str, window: int = 5) -> List[Tuple[int, int]]:
+    """Phase 3: Enhanced negation detection with forward/backward windows and prefix matching.
+    
+    Forward window: negation precedes symptom (e.g., "no itching")
+    Backward window: negation follows symptom (e.g., "itching absent")
+    """
     tokens = _tokenize(text)
     neg_spans: List[Tuple[int, int]] = []
     for i, (tok, s, e) in enumerate(tokens):
-        if tok.lower() in NEGATION_TOKENS:
-            # Negation window: next N tokens
+        tok_lower = tok.lower()
+        # Check exact match or prefix match for flexible negation detection
+        is_negation = tok_lower in NEGATION_TOKENS or any(
+            tok_lower.startswith(neg) for neg in NEGATION_TOKENS if len(neg) > 3
+        )
+        if is_negation:
+            # Forward window: next N tokens
             window_tokens = tokens[i + 1 : i + 1 + window]
             if window_tokens:
                 neg_start = window_tokens[0][1]
                 neg_end = window_tokens[-1][2]
                 neg_spans.append((neg_start, neg_end))
+            
+            # Backward window: previous N tokens (Phase 3: handle "symptom absent" pattern)
+            back_tokens = tokens[max(0, i - window) : i]
+            if back_tokens:
+                back_start = back_tokens[0][1]
+                back_end = back_tokens[-1][2]
+                neg_spans.append((back_start, back_end))
     return neg_spans
 
 
@@ -165,7 +218,11 @@ def match_symptoms(text: str, lexicon: List[LexiconEntry],
                    scorer: str = "wratio") -> List[Span]:
     if not lexicon:
         return []
-    tokens = _tokenize(text)
+    
+    # Phase 3: Clean emojis for better matching, but keep original text for positions
+    text_for_matching = EMOJI_PATTERN.sub(' ', text)
+    
+    tokens = _tokenize(text_for_matching)
     neg_regions = detect_negated_regions(text, window=negation_window)
     spans: List[Span] = []
 
@@ -184,7 +241,8 @@ def match_symptoms(text: str, lexicon: List[LexiconEntry],
     max_tok_len = max((m["tok_len"] for m in term_meta), default=0)
 
     # Exact phrase matching (greedy up to max_term_words)
-    lower_text = text.lower()
+    # Use cleaned text for matching
+    lower_text = text_for_matching.lower()
     for entry in lexicon:
         term = entry.term.lower()
         idx = 0
@@ -198,8 +256,9 @@ def match_symptoms(text: str, lexicon: List[LexiconEntry],
             after_ok = end_idx == len(lower_text) or not lower_text[end_idx].isalnum()
             if before_ok and after_ok:
                 negated = _is_negated(idx, end_idx, neg_regions)
+                # Extract from original text (not cleaned) for span text
                 spans.append(Span(
-                    text=text[idx:end_idx], start=idx, end=end_idx, label="SYMPTOM",
+                    text=text[idx:end_idx].strip(), start=idx, end=end_idx, label="SYMPTOM",
                     canonical=entry.canonical, source=entry.source, concept_id=entry.concept_id,
                     confidence=1.0, negated=negated
                 ))

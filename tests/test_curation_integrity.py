@@ -25,10 +25,10 @@ def _iter_jsonl(path: Path):
 
 
 def find_gold_files():
-    """Discover gold JSONL files for parametrization."""
+    """Discover gold JSONL files for parametrization (only files with 'gold' in name)."""
     if not EXPORT_DIR.exists():
         return []
-    return list(EXPORT_DIR.glob("*.jsonl"))
+    return list(EXPORT_DIR.glob("*gold*.jsonl"))
 
 
 class TestCurationIntegrity(unittest.TestCase):
