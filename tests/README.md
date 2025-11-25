@@ -7,9 +7,11 @@
 Refactored test suite (Nov 2025) to eliminate duplication (~70% reduction in setup code), improve maintainability via composition/inheritance, and expand edge case coverage (3x increase).
 
 ### Test Statistics
-- **Total Tests**: 114+ (after refactoring)
+- **Total Tests**: 140+ (after Phase 2)
+- **Core Tests**: 16 (weak labeling, overlap, integrity)
 - **Edge Case Tests**: 98 (boundary, unicode, negation, overlap, malformed)
-- **Pass Rate**: 91/98 edge cases, 16/16 core tests (known failures document system limitations)
+- **Integration Tests**: 26 (end-to-end pipeline, scale/stress)
+- **Pass Rate**: 133/140 tests passing (known failures document system limitations)
 - **Infrastructure**: 3 base classes, 3 composition helpers, 8+ pytest fixtures
 
 ## Architecture
@@ -168,9 +170,22 @@ def test_with_fixtures(mock_config, sample_texts):
 - `test_overlap_scenarios.py`: Nested, partial, adjacent, conflict detection (19 tests)
 - `test_malformed_inputs.py`: Empty text, invalid JSON, missing fields, boundary errors (28 tests)
 
-### Integration Tests (`tests/integration/`) [Planned]
-- `test_end_to_end.py`: Full weak label → LLM refine → gold export pipeline
-- `test_scale.py`: Stress test with 1000 documents
+### Integration Tests (`tests/integration/`)
+- `test_end_to_end.py`: Full pipeline validation (11 tests)
+  - Weak labeling stage
+  - JSONL persistence
+  - Gold export integrity
+  - Confidence filtering
+  - Provenance tracking
+  - LLM refinement stub integration
+  - Multi-document batch processing
+- `test_scale.py`: Performance and stress tests (15 tests)
+  - 100/1000 document processing
+  - Long text handling (5k-10k chars)
+  - Memory efficiency
+  - Concurrent detection (many symptoms/products)
+  - Unicode at scale
+  - Performance benchmarks (<100ms/doc average)
 
 ## Running Tests
 
@@ -192,6 +207,11 @@ pytest tests/test_weak_label.py::TestSymptomMatching -v
 ### Edge Cases Only
 ```powershell
 pytest tests/edge_cases/ -v
+```
+
+### Integration Tests Only
+```powershell
+pytest tests/integration/ -v
 ```
 
 ### Parametrized Test Subset
@@ -259,11 +279,10 @@ def test_boundary_validation(span, should_fail):
 5. **Data quality**: Existing gold files may have provenance gaps or boundary errors
 
 ### Future Improvements
-- Add integration tests for full pipeline (weak → LLM → gold)
 - Expand negation cue list based on test feedback
-- Add stress tests (1000+ documents)
-- Inter-annotator agreement metrics
+- Add inter-annotator agreement metrics
 - Active learning simulation tests
+- CI/CD integration (GitHub Actions)
 
 ## CI/CD Integration
 
@@ -325,7 +344,8 @@ pytest tests/test_weak_label.py tests/test_overlap_merge.py -q
 ### Test Execution Times (Approximate)
 - Core tests: ~0.3s
 - Edge cases: ~2.1s
-- Full suite: ~3s (without integration tests)
+- Integration tests: ~2.2s (includes 1000-doc stress test)
+- Full suite: ~5s
 
 ### Optimization Tips
 - Use `pytest -n auto` for parallel execution (requires pytest-xdist)
@@ -344,4 +364,4 @@ For test infrastructure questions or issues:
 
 ---
 
-Last Updated: November 2025 (Test Refactoring Phase 1 Complete)
+Last Updated: November 2025 (Phase 2 Complete: Integration & Scale Tests Added)
