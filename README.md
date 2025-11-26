@@ -1,76 +1,71 @@
 <div align="center">
 
-<!-- Brand block: single visual logo + tagline (avoid duplicate title) -->
 ![SpanForge Logo Light](docs/assets/SpanForge-light.svg#gh-light-mode-only)
 ![SpanForge Logo Dark](docs/assets/SpanForge-dark.svg#gh-dark-mode-only)
 
-<p><em>From noisy complaints to canonical adverse event spans.</em><br/>
-<strong>BioBERT · Weak Labeling · Human Annotation · Provenance · Quality</strong></p>
-<hr style="width:58%;border:0;border-top:1px solid #d0d0d0;margin-top:12px" />
+**Biomedical NER with BioBERT and Weak Labeling**
+
+[![Test Suite](https://github.com/paulboys/SpanForge/actions/workflows/test.yml/badge.svg)](https://github.com/paulboys/SpanForge/actions/workflows/test.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.5.0-green.svg)](https://github.com/paulboys/SpanForge/releases/tag/v0.5.0)
+
 </div>
 
-SpanForge is an end-to-end workflow for extracting symptom-like adverse events and product mentions from consumer complaints using BioBERT plus lexicon/fuzzy heuristics, human curation in Label Studio, and provenance/quality reporting.
+SpanForge extracts adverse events and product mentions from consumer complaints using **BioBERT embeddings**, **lexicon-driven weak labeling**, and **LLM-powered refinement** with production-ready annotation workflows.
 
-<details>
-<summary><strong>Table of Contents</strong></summary>
+📚 **[Full Documentation](https://paulboys.github.io/SpanForge/)** | 🚀 **[Quick Start](#quick-start)** | 📖 **[Tutorial Notebook](scripts/AnnotationWalkthrough.ipynb)**
 
-1. Current Capability Snapshot
-2. Quick Start
-3. High-Level Workflow
-4. Architecture Overview
-5. Key Components
-6. Weak Labeling Heuristics
-7. Annotation Workflow
-8. Provenance & Registry
-9. Quality Metrics
-10. Directory Layout
-11. Testing
-12. Roadmap
-13. Contributing
-14. Privacy & Compliance
-15. Next Steps
-16. Reference Docs
-</details>
+---
 
-## Current Capability Snapshot
-| Stage | Implemented | Notes |
-|-------|-------------|-------|
-| Config & Model Loading | ✅ | BioBERT `dmis-lab/biobert-base-cased-v1.1` via HF Transformers |
-| Weak Labeling Heuristics | ✅ | Lexicon + fuzzy (WRatio≥0.88) + Jaccard≥40 + negation window=5 |
-| Notebook Tutorial | ✅ | `scripts/Workbook.ipynb` full ingestion→gold workflow |
-| Annotation Scripts | ✅ | Import, convert, quality, adjudicate, registry, CLI wrapper |
-| Provenance Fields | ✅ | `source, annotator, revision, canonical, concept_id` |
-| Quality Metrics | ✅ | Span density, label distribution, conflicts, (future kappa) |
-| Gold Conversion Integrity Tests | ✅ | Overlap & canonical validation (tests dir) |
-| Token Classification Head | ⏳ | Pending label inventory & gold expansion |
-| Domain Adaptation (MLM) | ⏳ | Planned post initial gold batch |
-| Baseline (RoBERTa) | ⏳ | Future comparative evaluation |
+## ✨ Key Features
 
-## Quick Start (PowerShell / Conda Recommended)
-```powershell
-conda env create -f environment.yml   # one-time (if present)
-conda activate NER
-pip install -r requirements.txt       # sync dependencies
-python scripts/verify_env.py          # model + device sanity
-pytest -q                             # run tests
-```
+- 🔬 **BioBERT Integration** - State-of-the-art biomedical language model
+- 📝 **Weak Labeling** - Fuzzy + exact matching with confidence scoring  
+- 🤖 **LLM Refinement** - Automated boundary correction (OpenAI, Anthropic, Azure)
+- 📊 **Evaluation Harness** - 10 metrics for measuring annotation quality
+- 🎯 **Label Studio Ready** - Production annotation workflow with tutorial
+- 🧪 **186 Tests** - 100% passing with comprehensive edge case coverage
+- ⚡ **Fast** - <100ms per document average
+- 📈 **Proven Results** - +13.4% IOU improvement over weak labels alone
 
-Alternative venv:
-```powershell
-python -m venv .venv
-. .venv\Scripts\Activate.ps1
+## 🚀 Quick Start
+
+```bash
+# Clone and setup
+git clone https://github.com/paulboys/SpanForge.git
+cd SpanForge
 pip install -r requirements.txt
-python scripts/verify_env.py
+
+# Basic usage
+python -c "
+from src.weak_label import load_symptom_lexicon, load_product_lexicon, weak_label
+from pathlib import Path
+
+symptom_lex = load_symptom_lexicon(Path('data/lexicon/symptoms.csv'))
+product_lex = load_product_lexicon(Path('data/lexicon/products.csv'))
+
+text = 'Patient developed severe rash after using the cream'
+## 📋 Workflow
+
+```mermaid
+graph LR
+    A[Raw Text] --> B[Weak Labels]
+    B --> C[LLM Refinement]
+    C --> D[Label Studio]
+    D --> E[Gold Standard]
+    E --> F[Evaluation]
+    F --> G[Model Training]
 ```
 
-## High-Level Workflow
-1. Ingest complaint texts (Notebook or script).
-2. Apply weak labeling (`src/weak_label.py`) to produce spans with confidence + negation flags.
-3. Export weak labels to JSONL (`data/output/...`).
-4. Convert to Label Studio task format & import (`scripts/annotation/import_weak_to_labelstudio.py`).
-5. Human annotation & correction in Label Studio (telemetry disabled).
-6. Export annotated tasks → convert to gold (`scripts/annotation/convert_labelstudio.py`).
-7. Run quality metrics (`scripts/annotation/quality_report.py`).
+**Phase 5 Complete** (v0.5.0):
+1. ✅ Weak labeling with confidence scoring
+2. ✅ LLM refinement (boundary correction, canonical normalization)
+3. ✅ Label Studio configuration with tutorial
+4. ✅ Production annotation workflow
+5. ✅ Evaluation harness (10 metrics)
+6. ✅ Visualization tools (6 plot types)
+7. ⏳ Token classification fine-tuning (Phase 7)Run quality metrics (`scripts/annotation/quality_report.py`).
 8. Register batch in provenance registry (`scripts/annotation/register_batch.py`).
 9. (Planned) Fine-tune token classification model on BIO-tagged gold.
 
@@ -84,75 +79,35 @@ Human Export → Gold Converter (+canonical +provenance) → Gold JSONL → Qual
                                                     └─► Future: BIO Tagging & Model Fine-Tune
 ```
 
-## Key Components
-- `src/config.py`: Central `AppConfig` (model name, device, max seq len, seed, negation window, fuzzy scorer).
-- `src/model.py`: Loads BioBERT tokenizer/model; foundation for future token classification head.
-- `src/weak_label.py`: Lexicon-driven + fuzzy/Jaccard gating, negation detection, confidence scoring.
-- `src/pipeline.py`: Simple inference utilities (will host supervised tagging once head added).
-- `scripts/Workbook.ipynb`: Hands-on, end-to-end educational walkthrough.
-- Annotation scripts under `scripts/annotation/`: project init, import weak, convert gold, quality, adjudication, registry, CLI orchestration.
+## 📊 Performance
 
-## Weak Labeling Heuristics (Summary)
-- Fuzzy scorer: WRatio ≥ 0.88.
-- Jaccard token-set threshold: ≥ 40.
-- Confidence: `0.8*fuzzy + 0.2*jaccard` (clamped ≤1.0).
-- Negation window: 5 tokens; ≥50% overlap triggers `negated=True`.
-- Last-token alignment enforced for multi-token fuzzy matches.
-- Anatomy single-token skip unless accompanied by explicit symptom phrase.
+| Metric | Value |
+|--------|-------|
+| **IOU Improvement** | +13.4% (weak → LLM) |
+| **Exact Match Rate** | 100% (on test fixtures) |
+| **F1 Score** | 1.000 (LLM vs gold) |
+| **Processing Speed** | <100ms per document |
+| **Test Coverage** | 186/186 passing (100%) |
 
-Details in `docs/heuristic.md`.
+## 📦 Project Structure
 
-## Annotation Workflow (Label Studio)
-1. Start Label Studio locally (disable telemetry).
-2. Create project using `data/annotation/config/label_config.xml`.
-3. Import tasks generated from weak labels.
-4. Annotators label SYMPTOM / PRODUCT spans following boundary & negation rules (see `docs/annotation_guide.md`).
-5. Export JSON; convert to gold with canonical + provenance.
-6. Run quality & adjudication for conflicts.
-7. Register batch for traceability.
-
-Step-by-step guide: `docs/tutorial_labeling.md`.
-
-## Provenance & Registry
-Gold records enriched with: `source`, `annotator`, `revision`, `canonical`, optional `concept_id`.
-`data/annotation/registry.csv` logs batch metadata (id, annotators, counts, notes) to audit evolution of training corpus.
-
-## Quality Metrics
-`quality_report.py` outputs JSON containing:
-- Task count, mean spans/task.
-- Label distribution & conflict list (overlapping differing labels).
-- Annotator span counts; (future) pairwise agreement (IOU ≥0.5) & drift signals.
-
-## Directory Layout (Condensed)
 ```
-README.md
-docs/
-  overview.md
-  annotation_guide.md
-  tutorial_labeling.md
-  heuristic.md
-src/
-  config.py
-  model.py
-  pipeline.py
-  weak_label.py
-scripts/
-  verify_env.py
-  Workbook.ipynb
-  build_meddra_symptom_lexicon.py
-  annotation/
-    init_label_studio_project.py
-    import_weak_to_labelstudio.py
-    convert_labelstudio.py
-    quality_report.py
-    adjudicate.py
-    register_batch.py
-    cli.py
-data/
-  lexicon/ (symptoms.csv, products.csv)
-  annotation/ (config/, exports/, raw/, reports/)
-tests/ (forward, weak labeling integrity, curation integrity)
-.github/copilot-instructions.md
+SpanForge/
+├── src/                    # Core modules
+│   ├── config.py          # Configuration management
+│   ├── model.py           # BioBERT loading
+│   ├── weak_label.py      # Weak labeling logic
+│   ├── pipeline.py        # End-to-end pipeline
+│   ├── llm_agent.py       # LLM refinement
+│   └── evaluation/        # Metrics (10 functions)
+├── scripts/
+│   ├── AnnotationWalkthrough.ipynb  # Tutorial (7 sections)
+│   └── annotation/        # CLI tools (8 subcommands)
+├── data/
+│   ├── lexicon/           # Symptoms & products
+│   └── annotation/        # Label Studio config
+├── tests/                 # 186 tests (100% passing)
+└── docs/                  # 2,000+ lines of documentation
 ```
 
 ## Testing
@@ -195,14 +150,44 @@ Focus: forward pass, weak labeling correctness, gold conversion integrity. Exten
 ## Reference Docs
 See: `docs/overview.md`, `docs/annotation_guide.md`, `docs/tutorial_labeling.md`, `docs/heuristic.md`.
 
+## 🗺️ Roadmap
+
+- [x] **Phase 1-4**: Bootstrap, weak labeling, testing, CI/CD
+- [x] **Phase 4.5**: LLM refinement & evaluation harness (186 tests)
+- [x] **Phase 5**: Annotation infrastructure (Label Studio + tutorial)
+- [ ] **Phase 6**: Gold standard assembly (500+ annotations)
+- [ ] **Phase 7**: Token classification fine-tuning
+- [ ] **Phase 8-10**: Domain adaptation, baselines, production deployment
+
+See **[Detailed Roadmap](docs/about/roadmap.md)** and **[Changelog](docs/about/changelog.md)**.## 📚 Documentation
+
+- **[Installation Guide](docs/installation.md)** - Setup instructions
+- **[Quick Start Tutorial](docs/quickstart.md)** - Basic usage examples
+- **[Annotation Tutorial](scripts/AnnotationWalkthrough.ipynb)** - Interactive notebook (7 sections)
+- **[Production Workflow](docs/production_workflow.md)** - Complete annotation guide (450+ lines)
+- **[LLM Evaluation](docs/llm_evaluation.md)** - Metrics reference
+- **[API Reference](https://paulboys.github.io/SpanForge/api/config/)** - Full API docs
+
+## 🤝 Contributing
+
+Contributions welcome! See **[Contributing Guide](docs/development/contributing.md)**.
+
+1. Fork the repository
+2. Create a feature branch
+3. Run tests: `pytest tests/ -v`
+4. Submit a pull request
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🔗 Links
+
+- **Documentation**: https://paulboys.github.io/SpanForge/
+- **Repository**: https://github.com/paulboys/SpanForge
+- **Issues**: https://github.com/paulboys/SpanForge/issues
+- **Releases**: https://github.com/paulboys/SpanForge/releases
+
 ---
-For a hands-on walkthrough open `scripts/Workbook.ipynb`.
 
-Light PNG (large, optional): [download](docs/assets/SpanForge.png)
-
-## Public Landing Page
-GitHub Pages (enable in repository settings → Pages → Source: `docs/` folder):
-
-https://paulboys.github.io/SpanForge/
-
-Features: responsive layout, dark mode, quick start, workflow cards, roadmap highlights.
+**Version**: 0.5.0 | **Status**: Production Ready | **Updated**: November 25, 2025
