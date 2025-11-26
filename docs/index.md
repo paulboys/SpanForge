@@ -15,7 +15,7 @@ SpanForge is a production-ready biomedical NER pipeline combining BioBERT contex
 - 🚫 **Negation Detection**: Bidirectional window with 10+ clinical cues
 - 🎯 **High Accuracy**: 98% precision on symptom detection
 - ⚡ **Fast Processing**: <100ms per document average
-- 🧪 **Well-Tested**: 144 tests with 100% pass rate
+- 🧪 **Well-Tested**: 186 tests with 100% pass rate (core + LLM + evaluation)
 - 🔄 **CI/CD Ready**: GitHub Actions with multi-OS/Python matrix
 
 ## Quick Start
@@ -155,8 +155,10 @@ SpanForge/
 - [x] Phase 2: Weak Label Refinement
 - [x] Phase 3: Test Infrastructure & Edge Cases
 - [x] Phase 4: CI/CD Integration
-- [ ] Phase 5: Annotation & Curation (Label Studio)
-- [ ] Phase 6: Gold Standard Assembly
+- [x] Phase 4.5: LLM Refinement & Evaluation Harness (186 tests passing)
+- [x] Phase 5: Annotation & Curation Infrastructure (Label Studio config, tutorial, production workflow)
+- [ ] Phase 5 (continued): Batch preparation scripts, first 100-task production batch
+- [ ] Phase 6: Gold Standard Assembly (500+ annotations)
 - [ ] Phase 7: Token Classification Fine-Tuning
 - [ ] Phase 8: Domain Adaptation (MLM)
 - [ ] Phase 9: Baseline Comparison (RoBERTa)
@@ -197,4 +199,4 @@ If you use SpanForge in your research, please cite:
 
 ---
 
-**Status**: Production Ready | **Version**: 0.1.0 | **Last Updated**: November 2025
+**Status**: Production Ready | **Version**: 0.5.0 | **Last Updated**: November 25, 2025

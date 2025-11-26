@@ -94,6 +94,14 @@ nav:
     - Negation Detection: user-guide/negation.md
     - Pipeline Usage: user-guide/pipeline.md
     - Annotation Workflow: user-guide/annotation.md
+  - Annotation & Evaluation:
+    - Overview: annotation_guide.md
+    - Tutorial (Labeling): tutorial_labeling.md
+    - Production Workflow: production_workflow.md
+    - LLM Evaluation: llm_evaluation.md
+    - Production Evaluation: production_evaluation.md
+    - LLM Providers: llm_providers.md
+    - Phase 5 Plan: phase_5_plan.md
   - API Reference:
     - Configuration: api/config.md
     - Model: api/model.md
@@ -103,6 +111,7 @@ nav:
   - Development:
     - Contributing: development/contributing.md
     - Testing: development/testing.md
+    - CI/CD: ci_cd.md
   - About:
     - Roadmap: about/roadmap.md
     - Changelog: about/changelog.md
