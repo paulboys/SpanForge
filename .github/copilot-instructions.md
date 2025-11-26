@@ -19,7 +19,8 @@ Implements configuration, BioBERT loading, lexicon-based weak labeling, explorat
 - Environment check: `scripts/verify_env.py`
 - Lexicons: `data/lexicon/symptoms.csv` (includes burning/burning sensation), `data/lexicon/products.csv`
 - Output artifact: `data/output/notebook_test.jsonl`
-- Test Suite: 171 tests (16 core, 98 edge cases, 26 integration, 4 curation, 27 evaluation) - 100% passing
+- Test Suite: 296 tests (16 core, 98 edge cases, 26 integration, 4 curation, 27 evaluation, 42 CAERS, 15 pipeline, 21 knowledge retrieval, 14 model token cls, 21 config, 12 LLM) - 99.3% passing (1 flaky performance test)
+- Test Coverage: 81.2% overall (740 statements, 139 missed); 100% coverage for pipeline.py, knowledge_retrieval.py, model_token_cls.py, model.py
 - CI/CD: GitHub Actions workflows (test.yml, pre-commit.yml), pre-commit hooks, pyproject.toml config
 - Dependencies: `requirements.txt`, `requirements-llm.txt` (openai, anthropic, tenacity), `requirements-viz.txt` (matplotlib, seaborn, numpy - optional)
 - Data Integration: `scripts/caers/download_caers.py` (FDA CAERS download, filter, weak label, JSONL export; 666K+ consumer complaints for cosmetics/personal care/supplements)
