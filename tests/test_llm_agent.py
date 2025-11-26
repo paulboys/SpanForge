@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.config import AppConfig
-from src.llm_agent import LLMAgent
+from src.llm_agent import LLMAgent, LLMSuggestion
 
 
 @pytest.fixture
@@ -27,6 +27,41 @@ def llm_config(temp_cache_file):
         llm_enabled=True, llm_provider="stub", llm_model="gpt-4", llm_cache_path=temp_cache_file
     )
     return config
+
+
+def test_llm_suggestion_with_defaults():
+    """Test LLMSuggestion dataclass can be instantiated with default parameters.
+
+    This test ensures Python 3.9 compatibility by verifying that Optional type hints
+    work correctly in dataclass field defaults (not using PEP 604 union syntax).
+    """
+    # Test with minimal required parameters
+    suggestion = LLMSuggestion(start=0, end=10, label="SYMPTOM")
+    assert suggestion.start == 0
+    assert suggestion.end == 10
+    assert suggestion.label == "SYMPTOM"
+    assert suggestion.negated is None
+    assert suggestion.canonical is None
+    assert suggestion.confidence_reason is None
+    assert suggestion.llm_confidence is None
+
+    # Test with all parameters specified
+    full_suggestion = LLMSuggestion(
+        start=5,
+        end=20,
+        label="PRODUCT",
+        negated=True,
+        canonical="standardized_name",
+        confidence_reason="High confidence based on context",
+        llm_confidence=0.95,
+    )
+    assert full_suggestion.start == 5
+    assert full_suggestion.end == 20
+    assert full_suggestion.label == "PRODUCT"
+    assert full_suggestion.negated is True
+    assert full_suggestion.canonical == "standardized_name"
+    assert full_suggestion.confidence_reason == "High confidence based on context"
+    assert full_suggestion.llm_confidence == 0.95
 
 
 def test_llm_agent_stub_mode(llm_config):
@@ -164,6 +199,13 @@ def test_azure_client_initialization(mock_getenv, llm_config):
 @patch("src.llm_agent.os.getenv")
 def test_anthropic_client_initialization(mock_getenv, llm_config):
     """Test Anthropic client initialization."""
+    try:
+        import anthropic  # noqa: F401
+
+        pytest.skip("anthropic package is installed - test expects missing dependency")
+    except ImportError:
+        pass
+
     mock_getenv.return_value = "test-api-key"
 
     anthropic_config = AppConfig(

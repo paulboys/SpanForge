@@ -49,10 +49,10 @@ class LLMSuggestion:
     start: int
     end: int
     label: str
-    negated: bool | None = None
-    canonical: str | None = None
-    confidence_reason: str | None = None
-    llm_confidence: float | None = None
+    negated: Optional[bool] = None
+    canonical: Optional[str] = None
+    confidence_reason: Optional[str] = None
+    llm_confidence: Optional[float] = None
 
 
 class LLMAgent:

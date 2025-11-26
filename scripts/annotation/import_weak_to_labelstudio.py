@@ -19,6 +19,7 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 import requests  # type: ignore
 from dotenv import load_dotenv
@@ -35,7 +36,7 @@ def read_weak(path: Path):
     return records
 
 
-def to_tasks(records, include_preannotated: bool, min_confidence: float | None):
+def to_tasks(records, include_preannotated: bool, min_confidence: Optional[float]):
     tasks = []
     for r in records:
         text = r.get("text") or r.get("data", {}).get("text")
