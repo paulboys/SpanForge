@@ -57,7 +57,7 @@ def compute_iou(span_a: Dict[str, Any], span_b: Dict[str, Any]) -> float:
 def compute_boundary_precision(
     predicted_spans: List[Dict[str, Any]],
     gold_spans: List[Dict[str, Any]],
-    exact_match_threshold: float = 1.0
+    exact_match_threshold: float = 1.0,
 ) -> Dict[str, float]:
     """Compute boundary precision metrics.
 
@@ -101,14 +101,14 @@ def compute_boundary_precision(
     return {
         "exact_match_rate": exact_matches / len(predicted_spans),
         "mean_iou": mean_iou,
-        "median_iou": median_iou
+        "median_iou": median_iou,
     }
 
 
 def compute_iou_delta(
     weak_spans: List[Dict[str, Any]],
     llm_spans: List[Dict[str, Any]],
-    gold_spans: List[Dict[str, Any]]
+    gold_spans: List[Dict[str, Any]],
 ) -> Dict[str, float]:
     """Compute IOU improvement from weak labels to LLM refinement.
 
@@ -140,7 +140,7 @@ def compute_iou_delta(
         "weak_mean_iou": weak_iou,
         "llm_mean_iou": llm_iou,
         "delta": delta,
-        "improvement_pct": improvement_pct
+        "improvement_pct": improvement_pct,
     }
 
 
@@ -148,7 +148,7 @@ def compute_correction_rate(
     weak_spans: List[Dict[str, Any]],
     llm_spans: List[Dict[str, Any]],
     gold_spans: List[Dict[str, Any]],
-    iou_threshold: float = 0.5
+    iou_threshold: float = 0.5,
 ) -> Dict[str, Any]:
     """Compute LLM correction success rate.
 
@@ -192,15 +192,29 @@ def compute_correction_rate(
             continue  # No LLM refinement for this weak span
 
         # Check if span was modified
-        if (weak_span["start"] != best_llm_match["start"] or 
-            weak_span["end"] != best_llm_match["end"]):
+        if (
+            weak_span["start"] != best_llm_match["start"]
+            or weak_span["end"] != best_llm_match["end"]
+        ):
             total_modified += 1
 
             # Compare to gold standard
-            weak_gold_iou = max([compute_iou(weak_span, g) for g in gold_spans 
-                                 if g.get("label") == weak_span.get("label")] or [0.0])
-            llm_gold_iou = max([compute_iou(best_llm_match, g) for g in gold_spans 
-                                if g.get("label") == best_llm_match.get("label")] or [0.0])
+            weak_gold_iou = max(
+                [
+                    compute_iou(weak_span, g)
+                    for g in gold_spans
+                    if g.get("label") == weak_span.get("label")
+                ]
+                or [0.0]
+            )
+            llm_gold_iou = max(
+                [
+                    compute_iou(best_llm_match, g)
+                    for g in gold_spans
+                    if g.get("label") == best_llm_match.get("label")
+                ]
+                or [0.0]
+            )
 
             if llm_gold_iou > weak_gold_iou:
                 improved += 1
@@ -218,7 +232,7 @@ def compute_correction_rate(
         "worsened_count": worsened,
         "unchanged_count": unchanged,
         "improvement_rate": improved / total_modified if total_modified > 0 else 0.0,
-        "false_refinement_rate": worsened / total_modified if total_modified > 0 else 0.0
+        "false_refinement_rate": worsened / total_modified if total_modified > 0 else 0.0,
     }
 
 
@@ -226,7 +240,7 @@ def calibration_curve(
     spans: List[Dict[str, Any]],
     gold_spans: List[Dict[str, Any]],
     confidence_key: str = "confidence",
-    num_bins: int = 10
+    num_bins: int = 10,
 ) -> Dict[str, List[float]]:
     """Compute calibration curve for confidence scores.
 
@@ -259,8 +273,7 @@ def calibration_curve(
 
         # Check if span matches gold
         matches_gold = any(
-            compute_iou(span, g) >= 0.5 and span.get("label") == g.get("label")
-            for g in gold_spans
+            compute_iou(span, g) >= 0.5 and span.get("label") == g.get("label") for g in gold_spans
         )
         bins[bin_idx].append(1.0 if matches_gold else 0.0)
 
@@ -269,17 +282,11 @@ def calibration_curve(
     accuracy = [sum(b) / len(b) if b else 0.0 for b in bins]
     counts = [len(b) for b in bins]
 
-    return {
-        "bin_centers": bin_centers,
-        "accuracy": accuracy,
-        "counts": counts
-    }
+    return {"bin_centers": bin_centers, "accuracy": accuracy, "counts": counts}
 
 
 def stratify_by_confidence(
-    spans: List[Dict[str, Any]],
-    confidence_key: str = "confidence",
-    buckets: List[float] = None
+    spans: List[Dict[str, Any]], confidence_key: str = "confidence", buckets: List[float] = None
 ) -> Dict[str, List[Dict[str, Any]]]:
     """Stratify spans into confidence buckets.
 
@@ -321,9 +328,7 @@ def stratify_by_confidence(
     return stratified
 
 
-def stratify_by_label(
-    spans: List[Dict[str, Any]]
-) -> Dict[str, List[Dict[str, Any]]]:
+def stratify_by_label(spans: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
     """Stratify spans by entity label.
 
     Args:
@@ -351,8 +356,7 @@ def stratify_by_label(
 
 
 def stratify_by_span_length(
-    spans: List[Dict[str, Any]],
-    text_key: str = "text"
+    spans: List[Dict[str, Any]], text_key: str = "text"
 ) -> Dict[str, List[Dict[str, Any]]]:
     """Stratify spans by token/word length.
 
@@ -385,16 +389,13 @@ def stratify_by_span_length(
         else:
             multi_word.append(span)
 
-    return {
-        "single_word": single_word,
-        "multi_word": multi_word
-    }
+    return {"single_word": single_word, "multi_word": multi_word}
 
 
 def compute_precision_recall_f1(
     predicted_spans: List[Dict[str, Any]],
     gold_spans: List[Dict[str, Any]],
-    iou_threshold: float = 0.5
+    iou_threshold: float = 0.5,
 ) -> Dict[str, float]:
     """Compute precision, recall, and F1 score.
 
@@ -436,8 +437,4 @@ def compute_precision_recall_f1(
     recall = true_positives / len(gold_spans)
     f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
 
-    return {
-        "precision": precision,
-        "recall": recall,
-        "f1": f1
-    }
+    return {"precision": precision, "recall": recall, "f1": f1}

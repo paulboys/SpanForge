@@ -69,9 +69,9 @@ class TestBoundaryPrecision:
         """Test perfect boundary match."""
         pred = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_boundary_precision(pred, gold)
-        
+
         assert result["exact_match_rate"] == 1.0
         assert result["mean_iou"] == 1.0
 
@@ -79,16 +79,16 @@ class TestBoundaryPrecision:
         """Test partial boundary match."""
         pred = [{"start": 10, "end": 22, "label": "SYMPTOM"}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_boundary_precision(pred, gold)
-        
+
         assert result["exact_match_rate"] == 0.0  # Not exact
         assert 0.8 < result["mean_iou"] < 0.9  # Partial match
 
     def test_boundary_precision_empty(self):
         """Test with empty predictions."""
         result = compute_boundary_precision([], [{"start": 10, "end": 20, "label": "SYMPTOM"}])
-        
+
         assert result["exact_match_rate"] == 0.0
         assert result["mean_iou"] == 0.0
 
@@ -101,9 +101,9 @@ class TestIOUDelta:
         weak = [{"start": 10, "end": 25, "label": "SYMPTOM"}]
         llm = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_iou_delta(weak, llm, gold)
-        
+
         assert result["llm_mean_iou"] > result["weak_mean_iou"]
         assert result["delta"] > 0
         assert result["improvement_pct"] > 0
@@ -113,9 +113,9 @@ class TestIOUDelta:
         weak = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         llm = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_iou_delta(weak, llm, gold)
-        
+
         assert result["delta"] == 0.0
         assert result["improvement_pct"] == 0.0
 
@@ -128,9 +128,9 @@ class TestCorrectionRate:
         weak = [{"start": 10, "end": 25, "label": "SYMPTOM"}]
         llm = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_correction_rate(weak, llm, gold)
-        
+
         assert result["total_spans"] == 1
         assert result["modified_count"] == 1
         assert result["improved_count"] == 1
@@ -141,9 +141,9 @@ class TestCorrectionRate:
         weak = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         llm = [{"start": 10, "end": 25, "label": "SYMPTOM"}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_correction_rate(weak, llm, gold)
-        
+
         assert result["worsened_count"] == 1
         assert result["false_refinement_rate"] > 0
 
@@ -152,9 +152,9 @@ class TestCorrectionRate:
         weak = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         llm = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_correction_rate(weak, llm, gold)
-        
+
         assert result["modified_count"] == 0
         assert result["unchanged_count"] == 1
 
@@ -166,12 +166,12 @@ class TestCalibration:
         """Test basic calibration curve computation."""
         spans = [
             {"start": 10, "end": 20, "label": "SYMPTOM", "confidence": 0.9},
-            {"start": 30, "end": 40, "label": "SYMPTOM", "confidence": 0.5}
+            {"start": 30, "end": 40, "label": "SYMPTOM", "confidence": 0.5},
         ]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         curve = calibration_curve(spans, gold, num_bins=5)
-        
+
         assert len(curve["bin_centers"]) == 5
         assert len(curve["accuracy"]) == 5
         assert len(curve["counts"]) == 5
@@ -180,9 +180,9 @@ class TestCalibration:
         """Test calibration with perfect predictions."""
         spans = [{"start": 10, "end": 20, "label": "SYMPTOM", "confidence": 0.9}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         curve = calibration_curve(spans, gold, num_bins=10)
-        
+
         # High confidence bin should have 100% accuracy
         high_conf_bin = curve["accuracy"][-1]
         assert high_conf_bin == 1.0 or curve["counts"][-1] == 0
@@ -196,11 +196,11 @@ class TestStratification:
         spans = [
             {"start": 0, "end": 5, "confidence": 0.65},
             {"start": 10, "end": 15, "confidence": 0.95},
-            {"start": 20, "end": 25, "confidence": 0.75}
+            {"start": 20, "end": 25, "confidence": 0.75},
         ]
-        
+
         result = stratify_by_confidence(spans)
-        
+
         assert "0.60-0.70" in result
         assert "0.90-1.00" in result
         assert len(result["0.60-0.70"]) == 1
@@ -211,11 +211,11 @@ class TestStratification:
         spans = [
             {"start": 0, "end": 5, "label": "SYMPTOM"},
             {"start": 10, "end": 15, "label": "PRODUCT"},
-            {"start": 20, "end": 25, "label": "SYMPTOM"}
+            {"start": 20, "end": 25, "label": "SYMPTOM"},
         ]
-        
+
         result = stratify_by_label(spans)
-        
+
         assert "SYMPTOM" in result
         assert "PRODUCT" in result
         assert len(result["SYMPTOM"]) == 2
@@ -226,11 +226,11 @@ class TestStratification:
         spans = [
             {"start": 0, "end": 4, "text": "rash"},
             {"start": 10, "end": 27, "text": "burning sensation"},
-            {"start": 30, "end": 35, "text": "itch"}
+            {"start": 30, "end": 35, "text": "itch"},
         ]
-        
+
         result = stratify_by_span_length(spans)
-        
+
         assert "single_word" in result
         assert "multi_word" in result
         assert len(result["single_word"]) == 2
@@ -244,9 +244,9 @@ class TestPrecisionRecallF1:
         """Test perfect P/R/F1."""
         pred = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_precision_recall_f1(pred, gold)
-        
+
         assert result["precision"] == 1.0
         assert result["recall"] == 1.0
         assert result["f1"] == 1.0
@@ -255,12 +255,12 @@ class TestPrecisionRecallF1:
         """Test with false positive."""
         pred = [
             {"start": 10, "end": 20, "label": "SYMPTOM"},
-            {"start": 30, "end": 40, "label": "SYMPTOM"}
+            {"start": 30, "end": 40, "label": "SYMPTOM"},
         ]
         gold = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
-        
+
         result = compute_precision_recall_f1(pred, gold)
-        
+
         assert result["precision"] == 0.5  # 1 TP, 1 FP
         assert result["recall"] == 1.0  # 1 TP, 0 FN
         assert 0.6 < result["f1"] < 0.7
@@ -270,11 +270,11 @@ class TestPrecisionRecallF1:
         pred = [{"start": 10, "end": 20, "label": "SYMPTOM"}]
         gold = [
             {"start": 10, "end": 20, "label": "SYMPTOM"},
-            {"start": 30, "end": 40, "label": "SYMPTOM"}
+            {"start": 30, "end": 40, "label": "SYMPTOM"},
         ]
-        
+
         result = compute_precision_recall_f1(pred, gold)
-        
+
         assert result["precision"] == 1.0  # 1 TP, 0 FP
         assert result["recall"] == 0.5  # 1 TP, 1 FN
         assert 0.6 < result["f1"] < 0.7
@@ -282,7 +282,7 @@ class TestPrecisionRecallF1:
     def test_prf_empty_predictions(self):
         """Test with no predictions."""
         result = compute_precision_recall_f1([], [{"start": 10, "end": 20, "label": "SYMPTOM"}])
-        
+
         assert result["precision"] == 0.0
         assert result["recall"] == 0.0
         assert result["f1"] == 0.0
@@ -299,13 +299,13 @@ class TestEndToEnd:
     def test_load_weak_fixture(self, fixture_dir):
         """Test loading weak label fixture."""
         weak_path = fixture_dir / "weak_baseline.jsonl"
-        
+
         records = []
-        with open(weak_path, 'r') as f:
+        with open(weak_path, "r") as f:
             for line in f:
                 if line.strip():
                     records.append(json.loads(line))
-        
+
         assert len(records) == 3
         assert "spans" in records[0]
         assert len(records[0]["spans"]) > 0
@@ -313,13 +313,13 @@ class TestEndToEnd:
     def test_load_refined_fixture(self, fixture_dir):
         """Test loading LLM-refined fixture."""
         refined_path = fixture_dir / "gold_with_llm_refined.jsonl"
-        
+
         records = []
-        with open(refined_path, 'r') as f:
+        with open(refined_path, "r") as f:
             for line in f:
                 if line.strip():
                     records.append(json.loads(line))
-        
+
         assert len(records) == 3
         assert "llm_suggestions" in records[0]
         assert "llm_meta" in records[0]
@@ -327,13 +327,13 @@ class TestEndToEnd:
     def test_load_gold_fixture(self, fixture_dir):
         """Test loading gold standard fixture."""
         gold_path = fixture_dir / "gold_standard.jsonl"
-        
+
         records = []
-        with open(gold_path, 'r') as f:
+        with open(gold_path, "r") as f:
             for line in f:
                 if line.strip():
                     records.append(json.loads(line))
-        
+
         assert len(records) == 3
         # Check that spans have gold provenance
         assert all(len(r.get("spans", [])) > 0 for r in records)
@@ -344,19 +344,19 @@ class TestEndToEnd:
         weak_path = fixture_dir / "weak_baseline.jsonl"
         refined_path = fixture_dir / "gold_with_llm_refined.jsonl"
         gold_path = fixture_dir / "gold_standard.jsonl"
-        
-        with open(weak_path, 'r') as f:
+
+        with open(weak_path, "r") as f:
             weak_records = [json.loads(line) for line in f if line.strip()]
-        
-        with open(refined_path, 'r') as f:
+
+        with open(refined_path, "r") as f:
             refined_records = [json.loads(line) for line in f if line.strip()]
-        
-        with open(gold_path, 'r') as f:
+
+        with open(gold_path, "r") as f:
             gold_records = [json.loads(line) for line in f if line.strip()]
-        
+
         # All should have same number of records
         assert len(weak_records) == len(refined_records) == len(gold_records)
-        
+
         # Texts should match
         for w, r, g in zip(weak_records, refined_records, gold_records):
             assert w["text"] == r["text"] == g["text"]

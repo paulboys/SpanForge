@@ -47,7 +47,7 @@ def load_jsonl(filepath: str) -> List[Dict[str, Any]]:
         List of parsed JSON records
     """
     records = []
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         for line in f:
             if line.strip():
                 records.append(json.loads(line))
@@ -55,8 +55,7 @@ def load_jsonl(filepath: str) -> List[Dict[str, Any]]:
 
 
 def extract_spans_from_records(
-    records: List[Dict[str, Any]],
-    span_key: str = "spans"
+    records: List[Dict[str, Any]], span_key: str = "spans"
 ) -> List[Dict[str, Any]]:
     """Extract all spans from JSONL records.
 
@@ -74,9 +73,7 @@ def extract_spans_from_records(
     return all_spans
 
 
-def extract_llm_suggestions_from_records(
-    records: List[Dict[str, Any]]
-) -> List[Dict[str, Any]]:
+def extract_llm_suggestions_from_records(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Extract LLM suggestions from refined JSONL records.
 
     Args:
@@ -95,7 +92,7 @@ def extract_llm_suggestions_from_records(
 def evaluate_overall_metrics(
     weak_spans: List[Dict[str, Any]],
     llm_spans: List[Dict[str, Any]],
-    gold_spans: List[Dict[str, Any]]
+    gold_spans: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
     """Compute overall evaluation metrics.
 
@@ -137,8 +134,8 @@ def evaluate_overall_metrics(
         "span_counts": {
             "weak_total": len(weak_spans),
             "llm_total": len(llm_spans),
-            "gold_total": len(gold_spans)
-        }
+            "gold_total": len(gold_spans),
+        },
     }
 
 
@@ -146,7 +143,7 @@ def evaluate_stratified_metrics(
     weak_spans: List[Dict[str, Any]],
     llm_spans: List[Dict[str, Any]],
     gold_spans: List[Dict[str, Any]],
-    stratify_by: str = "label"
+    stratify_by: str = "label",
 ) -> Dict[str, Any]:
     """Compute stratified evaluation metrics.
 
@@ -179,7 +176,7 @@ def evaluate_stratified_metrics(
     for stratum_name in weak_strata.keys():
         weak_subset = weak_strata.get(stratum_name, [])
         llm_subset = llm_strata.get(stratum_name, [])
-        
+
         # For confidence stratification, use all gold spans
         if stratify_by == "confidence":
             gold_subset = gold_spans
@@ -201,8 +198,8 @@ def evaluate_stratified_metrics(
             "span_counts": {
                 "weak": len(weak_subset),
                 "llm": len(llm_subset),
-                "gold": len(gold_subset)
-            }
+                "gold": len(gold_subset),
+            },
         }
 
     return stratified_results
@@ -258,15 +255,17 @@ def generate_markdown_summary(report: Dict[str, Any]) -> str:
             md += f"### Stratified {strat_type.replace('by_', '').replace('_', ' ').title()}\n\n"
             md += "| Stratum | Weak F1 | LLM F1 | IOU Delta | Span Count |\n"
             md += "|---------|---------|--------|-----------|------------|\n"
-            
+
             for stratum_name, metrics in report[strat_type].items():
                 weak_f1 = metrics["weak_metrics"]["f1"]
                 llm_f1 = metrics["llm_metrics"]["f1"]
                 iou_d = metrics["iou_delta"]["delta"]
                 count = metrics["span_counts"]["weak"]
-                
-                md += f"| {stratum_name} | {weak_f1:.3f} | {llm_f1:.3f} | {iou_d:+.3f} | {count} |\n"
-            
+
+                md += (
+                    f"| {stratum_name} | {weak_f1:.3f} | {llm_f1:.3f} | {iou_d:+.3f} | {count} |\n"
+                )
+
             md += "\n"
 
     md += f"""
@@ -293,37 +292,19 @@ def main():
     parser = argparse.ArgumentParser(
         description="Evaluate LLM refinement quality against gold standard"
     )
-    parser.add_argument(
-        "--weak",
-        required=True,
-        help="Path to weak label JSONL file"
-    )
-    parser.add_argument(
-        "--refined",
-        required=True,
-        help="Path to LLM-refined JSONL file"
-    )
-    parser.add_argument(
-        "--gold",
-        required=True,
-        help="Path to gold standard JSONL file"
-    )
-    parser.add_argument(
-        "--output",
-        required=True,
-        help="Path to output JSON report"
-    )
+    parser.add_argument("--weak", required=True, help="Path to weak label JSONL file")
+    parser.add_argument("--refined", required=True, help="Path to LLM-refined JSONL file")
+    parser.add_argument("--gold", required=True, help="Path to gold standard JSONL file")
+    parser.add_argument("--output", required=True, help="Path to output JSON report")
     parser.add_argument(
         "--stratify",
         nargs="+",
         default=["label"],
         choices=["label", "confidence", "span_length"],
-        help="Stratification dimensions (default: label)"
+        help="Stratification dimensions (default: label)",
     )
     parser.add_argument(
-        "--markdown",
-        action="store_true",
-        help="Generate markdown summary alongside JSON report"
+        "--markdown", action="store_true", help="Generate markdown summary alongside JSON report"
     )
 
     args = parser.parse_args()
@@ -353,11 +334,7 @@ def main():
     # Build report
     report = {
         "overall_metrics": overall_metrics,
-        "input_files": {
-            "weak": args.weak,
-            "refined": args.refined,
-            "gold": args.gold
-        }
+        "input_files": {"weak": args.weak, "refined": args.refined, "gold": args.gold},
     }
 
     # Compute stratified metrics
@@ -371,20 +348,20 @@ def main():
     # Save JSON report
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(output_path, 'w', encoding='utf-8') as f:
+
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
-    
+
     print(f"\n✓ JSON report saved to {output_path}")
 
     # Generate markdown if requested
     if args.markdown:
         md_content = generate_markdown_summary(report)
-        md_path = output_path.with_suffix('.md')
-        
-        with open(md_path, 'w', encoding='utf-8') as f:
+        md_path = output_path.with_suffix(".md")
+
+        with open(md_path, "w", encoding="utf-8") as f:
             f.write(md_content)
-        
+
         print(f"✓ Markdown summary saved to {md_path}")
 
     # Print quick summary
@@ -396,12 +373,12 @@ def main():
     print(f"  Weak:  {iou_delta['weak_mean_iou']:.3f}")
     print(f"  LLM:   {iou_delta['llm_mean_iou']:.3f}")
     print(f"  Delta: {iou_delta['delta']:+.3f}")
-    
+
     correction = overall_metrics["correction_metrics"]
     print(f"\nCorrection Rate: {correction['improvement_rate']*100:.1f}%")
     print(f"  Improved:  {correction['improved_count']}/{correction['modified_count']}")
     print(f"  Worsened:  {correction['worsened_count']}/{correction['modified_count']}")
-    
+
     llm_prf = overall_metrics["llm_precision_recall_f1"]
     print(f"\nLLM F1 Score: {llm_prf['f1']:.3f}")
     print(f"  Precision: {llm_prf['precision']:.3f}")

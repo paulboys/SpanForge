@@ -14,20 +14,19 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 try:
-    from tenacity import (
-        retry,
-        stop_after_attempt,
-        wait_exponential,
-        retry_if_exception_type,
-    )
+    from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
     TENACITY_AVAILABLE = True
 except ImportError:
     TENACITY_AVAILABLE = False
+
     # Fallback decorator that does nothing
     def retry(*args, **kwargs):
         def decorator(func):
             return func
+
         return decorator
+
     stop_after_attempt = wait_exponential = retry_if_exception_type = None
 
 from .config import get_config
@@ -79,7 +78,7 @@ class LLMAgent:
         >>> # Stub mode (no API calls)
         >>> agent = LLMAgent()
         >>> suggestions = agent.suggest(template, text, spans, knowledge)
-        
+
         >>> # OpenAI mode (requires OPENAI_API_KEY)
         >>> import os
         >>> os.environ['OPENAI_API_KEY'] = 'sk-...'
@@ -121,7 +120,7 @@ class LLMAgent:
         """
         prompt_hash = str(hash(prompt))
         self._cache[prompt_hash] = response
-        
+
         # Append to cache file
         try:
             self.cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -157,6 +156,7 @@ class LLMAgent:
         elif self.provider == "openai":
             try:
                 import openai
+
                 api_key = os.getenv("OPENAI_API_KEY")
                 if not api_key:
                     raise ValueError("OPENAI_API_KEY environment variable not set")
@@ -168,14 +168,13 @@ class LLMAgent:
         elif self.provider == "azure":
             try:
                 import openai
+
                 api_key = os.getenv("AZURE_OPENAI_API_KEY")
                 endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
                 if not api_key or not endpoint:
                     raise ValueError("AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT required")
                 self._client = openai.AzureOpenAI(
-                    api_key=api_key,
-                    azure_endpoint=endpoint,
-                    api_version="2024-02-15-preview"
+                    api_key=api_key, azure_endpoint=endpoint, api_version="2024-02-15-preview"
                 )
                 return self._client
             except ImportError:
@@ -184,6 +183,7 @@ class LLMAgent:
         elif self.provider == "anthropic":
             try:
                 import anthropic
+
                 api_key = os.getenv("ANTHROPIC_API_KEY")
                 if not api_key:
                     raise ValueError("ANTHROPIC_API_KEY environment variable not set")
@@ -245,15 +245,15 @@ class LLMAgent:
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are a medical NER expert. Analyze text and suggest entity spans in JSON format."
+                            "content": "You are a medical NER expert. Analyze text and suggest entity spans in JSON format.",
                         },
-                        {"role": "user", "content": prompt}
+                        {"role": "user", "content": prompt},
                     ],
                     temperature=0.3,
-                    response_format={"type": "json_object"}
+                    response_format={"type": "json_object"},
                 )
                 return completion.choices[0].message.content or "{}"
-            
+
             return _api_call()
         else:
             # No retry if tenacity not available
@@ -262,12 +262,12 @@ class LLMAgent:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a medical NER expert. Analyze text and suggest entity spans in JSON format."
+                        "content": "You are a medical NER expert. Analyze text and suggest entity spans in JSON format.",
                     },
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
             return completion.choices[0].message.content or "{}"
 
@@ -285,6 +285,7 @@ class LLMAgent:
             Exception: If API call fails after retries
         """
         if TENACITY_AVAILABLE:
+
             @retry(
                 stop=stop_after_attempt(3),
                 wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -296,10 +297,10 @@ class LLMAgent:
                     max_tokens=2048,
                     temperature=0.3,
                     system="You are a medical NER expert. Analyze text and suggest entity spans in JSON format.",
-                    messages=[{"role": "user", "content": prompt}]
+                    messages=[{"role": "user", "content": prompt}],
                 )
                 return message.content[0].text
-            
+
             return _api_call()
         else:
             message = client.messages.create(
@@ -307,7 +308,7 @@ class LLMAgent:
                 max_tokens=2048,
                 temperature=0.3,
                 system="You are a medical NER expert. Analyze text and suggest entity spans in JSON format.",
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
             return message.content[0].text
 
@@ -364,10 +365,7 @@ class LLMAgent:
 
         except Exception as e:
             # Return error response instead of raising
-            error_response = json.dumps({
-                "spans": [],
-                "notes": f"api_error: {str(e)[:100]}"
-            })
+            error_response = json.dumps({"spans": [], "notes": f"api_error: {str(e)[:100]}"})
             return error_response
 
     def parse(self, response: str) -> Dict[str, Any]:
