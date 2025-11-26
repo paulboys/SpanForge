@@ -1,0 +1,11 @@
+# Optional dependencies for LLM refinement
+# Install with: pip install -r requirements-llm.txt
+
+# OpenAI / Azure OpenAI
+openai>=1.0.0
+
+# Anthropic Claude
+anthropic>=0.18.0
+
+# Rate limiting and retries
+tenacity>=8.0.0

@@ -1,0 +1,7 @@
+# Visualization dependencies for plot_llm_metrics.py
+# Optional - only needed for generating evaluation plots
+# Install with: pip install -r requirements-viz.txt
+
+matplotlib>=3.5.0
+seaborn>=0.12.0
+numpy>=1.21.0

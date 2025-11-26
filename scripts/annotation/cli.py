@@ -2,14 +2,19 @@
 """Unified CLI wrapper for annotation workflow.
 
 Subcommands:
-  bootstrap       -> create project payload
+  bootstrap       -> create Label Studio project payload
   import-weak     -> convert weak JSONL to tasks (+optional push)
-  quality         -> compute quality metrics
+  quality         -> compute annotation quality metrics
   adjudicate      -> consensus across multiple gold files
   register        -> append batch provenance to registry
+  refine-llm      -> refine weak labels using LLM (OpenAI, Azure, Anthropic)
+  evaluate-llm    -> evaluate weak → LLM → gold with comprehensive metrics
+  plot-metrics    -> generate visualizations from evaluation reports
 
 Example:
   python scripts/annotation/cli.py bootstrap --name "Adverse Event NER"
+  python scripts/annotation/cli.py evaluate-llm --weak weak.jsonl --refined llm.jsonl --gold gold.jsonl --output report.json
+  python scripts/annotation/cli.py plot-metrics --report report.json --output-dir plots/
 """
 from __future__ import annotations
 
@@ -27,6 +32,8 @@ SUBCMDS = {
     "adjudicate": "adjudicate.py",
     "register": "register_batch.py",
     "refine-llm": "refine_llm.py",
+    "evaluate-llm": "evaluate_llm_refinement.py",
+    "plot-metrics": "plot_llm_metrics.py",
 }
 
 

@@ -1,8 +1,23 @@
 <View>
+  <Header value="Annotate Adverse Event Symptoms and Products"/>
+  
+  <Text name="text" value="$text" granularity="word"/>
+  
   <Labels name="label" toName="text">
-    <Label value="SYMPTOM" background="red"/>
-    <Label value="PRODUCT" background="blue"/>
+    <Label value="SYMPTOM" background="#2ca02c" hotkey="s"/>
+    <Label value="PRODUCT" background="#1f77b4" hotkey="p"/>
   </Labels>
-  <Text name="text" value="$text"/>
-  <!-- Optional checkbox for negation tracking (future integration) -->
+  
+  <!-- Optional: Enable for negation tracking -->
+  <!-- <Choices name="attributes" toName="text" perRegion="true">
+    <Choice value="negated" hint="Symptom is negated (e.g., 'no redness')"/>
+  </Choices> -->
+  
+  <Style>
+    .lsf-main-content.lsf-requesting .lsf-main-content__wrapper {
+      pointer-events: none;
+      opacity: 0.8;
+    }
+  </Style>
 </View>
+

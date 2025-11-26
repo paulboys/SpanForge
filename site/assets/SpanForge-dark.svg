@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="360" height="100" viewBox="0 0 360 100" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">SpanForge Logo Dark Mode</title>
+  <desc id="desc">Stylized brackets framing a molten gradient bar with the word SpanForge.</desc>
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="360" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0B6E99"/>
+      <stop offset="50%" stop-color="#E04F8A"/>
+      <stop offset="100%" stop-color="#F5A300"/>
+    </linearGradient>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        text { fill: #F5F8FA; }
+        .frame { stroke: #E0E3E6; }
+      }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="360" height="100" fill="none"/>
+  <path class="frame" d="M30 20 V80" stroke="#0B6E99" stroke-width="6" stroke-linecap="round"/>
+  <path class="frame" d="M330 20 V80" stroke="#0B6E99" stroke-width="6" stroke-linecap="round"/>
+  <rect x="60" y="38" width="240" height="24" rx="12" fill="url(#grad)" opacity="0.35"/>
+  <text x="180" y="58" font-size="42" font-family="Segoe UI, Arial, sans-serif" font-weight="600" text-anchor="middle" fill="#172026">SpanForge</text>
+</svg>
