@@ -8,12 +8,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import torch
 
-from src.pipeline import (
-    postprocess_predictions,
-    predict_tokens,
-    simple_inference,
-    tokenize_batch,
-)
+from src.pipeline import postprocess_predictions, predict_tokens, simple_inference, tokenize_batch
 from tests.base import TestBase
 
 
@@ -328,9 +323,7 @@ class TestSimpleInference(PipelineTestBase):
     @patch("src.pipeline.get_model")
     @patch("src.pipeline.get_tokenizer")
     @patch("src.pipeline.AppConfig")
-    def test_simple_inference_empty_lexicons(
-        self, mock_config_cls, mock_get_tok, mock_get_model
-    ):
+    def test_simple_inference_empty_lexicons(self, mock_config_cls, mock_get_tok, mock_get_model):
         """Test inference with empty lexicons."""
         # Setup mocks
         mock_config = MagicMock()
@@ -403,9 +396,7 @@ class TestPipelineIntegration(PipelineTestBase):
     @patch("src.pipeline.get_model")
     @patch("src.pipeline.get_tokenizer")
     @patch("src.pipeline.AppConfig")
-    def test_end_to_end_with_real_structures(
-        self, mock_config_cls, mock_get_tok, mock_get_model
-    ):
+    def test_end_to_end_with_real_structures(self, mock_config_cls, mock_get_tok, mock_get_model):
         """Test end-to-end pipeline with realistic data structures."""
         # Setup mocks
         mock_config = MagicMock()

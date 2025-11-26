@@ -1,3 +1,4 @@
+# Core dependencies
 python-dotenv
 pydantic
 typer
@@ -8,3 +9,13 @@ pandas
 pytest
 pydantic-settings
 rapidfuzz
+
+# Visualization dependencies (for plot_llm_metrics.py)
+matplotlib>=3.5.0
+seaborn>=0.12.0
+
+# LLM refinement dependencies (optional)
+# Uncomment the providers you need:
+openai>=1.0.0        # OpenAI / Azure OpenAI
+anthropic>=0.18.0    # Anthropic Claude
+tenacity>=8.0.0      # Rate limiting and retries

@@ -117,9 +117,11 @@ class TestDownloadCAERSData(CAERSTestBase):
     @patch("download_caers.urlretrieve")
     def test_download_new_file(self, mock_urlretrieve):
         """Test downloading CAERS data when file doesn't exist."""
+
         # Mock urlretrieve to create an empty file
         def create_file(url, path):
             Path(path).write_text("dummy data")
+
         mock_urlretrieve.side_effect = create_file
 
         result = download_caers.download_caers_data(self.download_dir, force=False)
@@ -763,9 +765,7 @@ class TestMainCLI(CAERSTestBase):
     @patch("download_caers.process_caers_to_jsonl")
     @patch("download_caers.load_symptom_lexicon")
     @patch("download_caers.load_product_lexicon")
-    def test_main_basic_args(
-        self, mock_prod_lex, mock_sym_lex, mock_process, mock_download
-    ):
+    def test_main_basic_args(self, mock_prod_lex, mock_sym_lex, mock_process, mock_download):
         """Test main function with basic arguments."""
         mock_download.return_value = self.download_dir / "test.csv"
         mock_sym_lex.return_value = []
@@ -780,7 +780,7 @@ class TestMainCLI(CAERSTestBase):
             "--limit",
             "100",
         ]
-        
+
         with patch("sys.argv", test_args):
             try:
                 download_caers.main()

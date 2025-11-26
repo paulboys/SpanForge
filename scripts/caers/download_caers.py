@@ -40,9 +40,7 @@ from src.weak_label import (
     weak_label,
 )
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # FDA CAERS data URL (updated quarterly)
@@ -298,9 +296,7 @@ def validate_record(record: Dict[str, Any]) -> Tuple[bool, List[str]]:
         span_text = span.get("text", "")
         actual_text = text[start:end]
         if span_text != actual_text:
-            issues.append(
-                f"Span {i}: Text mismatch ('{span_text}' vs '{actual_text}')"
-            )
+            issues.append(f"Span {i}: Text mismatch ('{span_text}' vs '{actual_text}')")
 
     return len(issues) == 0, issues
 
@@ -398,9 +394,7 @@ def process_caers_to_jsonl(
                 is_valid, issues = validate_record(record)
                 if not is_valid:
                     stats["validation_failed"] += 1
-                    logger.warning(
-                        f"Record {idx} validation failed: {'; '.join(issues)}"
-                    )
+                    logger.warning(f"Record {idx} validation failed: {'; '.join(issues)}")
                     continue
 
             # Write record
@@ -430,7 +424,9 @@ def process_caers_to_jsonl(
     logger.info(f"Total spans: {stats['total_spans']:,}")
     logger.info(f"  - Symptom spans: {stats['symptom_spans']:,}")
     logger.info(f"  - Product spans: {stats['product_spans']:,}")
-    logger.info(f"Average spans per complaint: {stats['total_spans'] / max(stats['successful'], 1):.2f}")
+    logger.info(
+        f"Average spans per complaint: {stats['total_spans'] / max(stats['successful'], 1):.2f}"
+    )
     logger.info(f"Output: {output_path}")
 
     return stats

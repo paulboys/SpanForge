@@ -352,7 +352,7 @@ def main():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
 
-    print(f"\n✓ JSON report saved to {output_path}")
+    print(f"\n[SUCCESS] JSON report saved to {output_path}")
 
     # Generate markdown if requested
     if args.markdown:
@@ -362,7 +362,7 @@ def main():
         with open(md_path, "w", encoding="utf-8") as f:
             f.write(md_content)
 
-        print(f"✓ Markdown summary saved to {md_path}")
+        print(f"[SUCCESS] Markdown summary saved to {md_path}")
 
     # Print quick summary
     print("\n" + "=" * 60)
