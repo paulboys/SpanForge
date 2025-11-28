@@ -1,0 +1,36 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "paulboys"
+    labels:
+      - "dependencies"
+      - "python"
+    groups:
+      # Group patch updates to reduce PR noise
+      patch-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+  
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: 1
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      actions-updates:
+        patterns:
+          - "*"

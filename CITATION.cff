@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use SpanForge in your research, please cite it as below."
+title: "SpanForge: Biomedical NER with BioBERT and Weak Labeling"
+version: 0.5.0
+date-released: 2025-11-25
+url: "https://github.com/paulboys/SpanForge"
+repository-code: "https://github.com/paulboys/SpanForge"
+license: MIT
+type: software
+
+authors:
+  - family-names: "Contributors"
+    given-names: "SpanForge"
+    
+keywords:
+  - named entity recognition
+  - BioBERT
+  - weak labeling
+  - biomedical NLP
+  - adverse events
+  - active learning
+  - annotation
+  
+abstract: |
+  SpanForge is a biomedical named entity recognition (NER) system that combines 
+  BioBERT embeddings with lexicon-driven weak labeling and LLM-powered refinement 
+  for extracting adverse events and product mentions from consumer complaints. 
+  The system includes production-ready annotation workflows, evaluation metrics, 
+  and integration with Label Studio for human curation.
+
+preferred-citation:
+  type: software
+  title: "SpanForge: Biomedical NER with BioBERT and Weak Labeling"
+  authors:
+    - family-names: "Contributors"
+      given-names: "SpanForge"
+  year: 2025
+  url: "https://github.com/paulboys/SpanForge"
+  version: 0.5.0
