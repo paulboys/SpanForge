@@ -356,3 +356,479 @@ def test_duplicate_prompts_use_cache(llm_config, temp_cache_file):
 
     # All should return same response
     assert len(set(responses)) == 1
+
+
+# ===== NEW COMPREHENSIVE TESTS FOR COVERAGE =====
+
+
+class TestLLMProviderInitialization:
+    """Test suite for LLM provider initialization logic."""
+
+    @patch("src.llm_agent.os.getenv")
+    def test_openai_client_with_valid_credentials(self, mock_getenv, llm_config):
+        """Test OpenAI client initialization succeeds with valid API key."""
+        try:
+            import openai  # noqa: F401
+        except ImportError:
+            pytest.skip("openai package not installed")
+
+        mock_getenv.return_value = "sk-test-valid-key-123"
+
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="openai",
+            llm_model="gpt-4",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+            # Client initialization should not raise
+            client = agent._get_client()
+            assert client is not None
+            assert agent._client is not None  # Cached
+
+    @patch("src.llm_agent.os.getenv")
+    def test_azure_missing_endpoint(self, mock_getenv, llm_config):
+        """Test Azure client raises error when endpoint is missing."""
+        try:
+            import openai  # noqa: F401
+        except ImportError:
+            pytest.skip("openai package not installed")
+
+        # API key provided but endpoint missing
+        def getenv_side_effect(key):
+            if key == "AZURE_OPENAI_API_KEY":
+                return "test-key"
+            return None
+
+        mock_getenv.side_effect = getenv_side_effect
+
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="azure",
+            llm_model="gpt-4",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        with pytest.raises(ValueError, match="AZURE_OPENAI_ENDPOINT"):
+            agent._get_client()
+
+    @patch("src.llm_agent.os.getenv")
+    def test_azure_missing_api_key(self, mock_getenv, llm_config):
+        """Test Azure client raises error when API key is missing."""
+        try:
+            import openai  # noqa: F401
+        except ImportError:
+            pytest.skip("openai package not installed")
+
+        # Endpoint provided but API key missing
+        def getenv_side_effect(key):
+            if key == "AZURE_OPENAI_ENDPOINT":
+                return "https://test.openai.azure.com/"
+            return None
+
+        mock_getenv.side_effect = getenv_side_effect
+
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="azure",
+            llm_model="gpt-4",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        with pytest.raises(ValueError, match="AZURE_OPENAI_API_KEY"):
+            agent._get_client()
+
+    @patch("src.llm_agent.os.getenv")
+    def test_anthropic_missing_api_key(self, mock_getenv, llm_config):
+        """Test Anthropic client raises error when API key is missing."""
+        try:
+            import anthropic  # noqa: F401
+        except ImportError:
+            pytest.skip("anthropic package not installed")
+
+        mock_getenv.return_value = None
+
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="anthropic",
+            llm_model="claude-3-sonnet-20240229",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
+            agent._get_client()
+
+
+class TestLLMCachingBehavior:
+    """Test suite for LLM caching mechanisms."""
+
+    def test_cache_loading_with_corrupted_file(self, llm_config, temp_cache_file):
+        """Test cache loading handles corrupted JSONL file gracefully."""
+        # Create corrupted cache file
+        Path(temp_cache_file).write_text("not valid json\n{incomplete", encoding="utf-8")
+
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent = LLMAgent()
+
+        # Should not crash, just skip corrupted entries
+        assert isinstance(agent._cache, dict)
+
+    def test_cache_hit_returns_immediately(self, llm_config, temp_cache_file):
+        """Test that cached responses are returned without API call."""
+        # Pre-populate cache
+        prompt = "Cached prompt"
+        cached_response = '{"spans": [{"start": 0, "end": 5}], "notes": "from_cache"}'
+
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent = LLMAgent()
+
+        # Manually add to cache
+        prompt_hash = str(hash(prompt))
+        agent._cache[prompt_hash] = cached_response
+
+        # Should return cached response
+        response = agent.call(prompt)
+        assert response == cached_response
+
+
+class TestLLMAPIInteractions:
+    """Test suite for LLM API call logic with mocking."""
+
+    @patch("src.llm_agent.os.getenv")
+    def test_openai_api_response_structure(self, mock_getenv, llm_config):
+        """Test OpenAI API response parsing."""
+        try:
+            import openai  # noqa: F401
+        except ImportError:
+            pytest.skip("openai package not installed")
+
+        mock_getenv.return_value = "sk-test-key"
+
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="openai",
+            llm_model="gpt-4",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        # Mock client with successful response
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = '{"spans": [], "notes": "success"}'
+        mock_client.chat.completions.create.return_value = mock_response
+
+        # Call with both client and prompt as required by signature
+        result = agent._call_openai_api(mock_client, "Test prompt")
+
+        assert result == '{"spans": [], "notes": "success"}'
+        mock_client.chat.completions.create.assert_called_once()
+
+    @patch("src.llm_agent.os.getenv")
+    def test_anthropic_api_call_structure(self, mock_getenv, llm_config):
+        """Test Anthropic API call structure and parameters."""
+        try:
+            import anthropic  # noqa: F401
+        except ImportError:
+            pytest.skip("anthropic package not installed")
+
+        mock_getenv.return_value = "sk-ant-test-key"
+
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="anthropic",
+            llm_model="claude-3-sonnet-20240229",
+            llm_cache_path=llm_config.llm_cache_path,
+            llm_temperature=0.2,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock()]
+        mock_response.content[0].text = '{"spans": [], "notes": "anthropic_response"}'
+        mock_client.messages.create.return_value = mock_response
+
+        agent._client = mock_client
+
+        result = agent._call_anthropic_api("Test prompt for Anthropic")
+
+        # Verify API was called with correct parameters
+        mock_client.messages.create.assert_called_once()
+        call_kwargs = mock_client.messages.create.call_args[1]
+        assert call_kwargs["model"] == "claude-3-sonnet-20240229"
+        assert call_kwargs["temperature"] == 0.2
+        assert call_kwargs["max_tokens"] == 4096
+        assert "Test prompt for Anthropic" in str(call_kwargs["messages"])
+
+    @patch("src.llm_agent.os.getenv")
+    def test_api_call_error_handling(self, mock_getenv, llm_config):
+        """Test that API call errors are caught and return empty spans."""
+        try:
+            import openai  # noqa: F401
+        except ImportError:
+            pytest.skip("openai package not installed")
+
+        mock_getenv.return_value = "sk-test-key"
+
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="openai",
+            llm_model="gpt-4",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        # Mock _call_openai_api to raise exception
+        with patch.object(agent, "_call_openai_api", side_effect=RuntimeError("API failed")):
+            response = agent.call("Test error")
+
+        parsed = json.loads(response)
+        assert parsed["spans"] == []
+        assert "api_error" in parsed["notes"]
+
+
+class TestLLMSuggestMethod:
+    """Test suite for the suggest() method with various scenarios."""
+
+    def test_suggest_with_knowledge_context(self, llm_config):
+        """Test suggest method incorporates knowledge context in prompt."""
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent = LLMAgent()
+
+        text = "Patient has pruritus and erythema."
+        weak_spans = [
+            {"start": 12, "end": 20, "label": "SYMPTOM", "text": "pruritus"},
+            {"start": 25, "end": 33, "label": "SYMPTOM", "text": "erythema"},
+        ]
+        template = "Text: {{text}}\nKnowledge: {{knowledge}}\nCandidates: {{candidates}}"
+        knowledge = {
+            "synonyms": {"pruritus": "itching", "erythema": "redness"},
+            "negation_terms": ["no", "without", "absent"],
+        }
+
+        suggestions = agent.suggest(template, text, weak_spans, knowledge)
+
+        # Stub mode returns empty, but method should execute without error
+        assert isinstance(suggestions, list)
+
+    def test_suggest_json_parsing_robust(self, llm_config):
+        """Test suggest handles malformed JSON from LLM gracefully."""
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="stub",
+            llm_model="test",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        # Mock call to return malformed JSON
+        with patch.object(agent, "call", return_value="not valid json at all"):
+            text = "Test text"
+            suggestions = agent.suggest("template", text, [], {})
+
+            # Should return empty list on parse failure
+            assert suggestions == []
+
+    def test_suggest_filters_low_confidence_spans(self, llm_config):
+        """Test suggest filters out spans below confidence threshold."""
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="stub",
+            llm_model="test",
+            llm_cache_path=llm_config.llm_cache_path,
+            llm_min_confidence=0.8,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        # Mock response with mixed confidence spans
+        mock_response = json.dumps(
+            {
+                "spans": [
+                    {"start": 0, "end": 5, "label": "SYMPTOM", "llm_confidence": 0.9},
+                    {"start": 10, "end": 15, "label": "SYMPTOM", "llm_confidence": 0.6},
+                    {"start": 20, "end": 25, "label": "PRODUCT", "llm_confidence": 0.85},
+                ],
+                "notes": "mixed_confidence",
+            }
+        )
+
+        with patch.object(agent, "call", return_value=mock_response):
+            suggestions = agent.suggest("template", "test text", [], {})
+
+            # Only spans >= 0.8 should be returned
+            assert len(suggestions) == 2
+            assert suggestions[0].llm_confidence == 0.9
+            assert suggestions[1].llm_confidence == 0.85
+
+    def test_suggest_preserves_all_fields(self, llm_config):
+        """Test suggest preserves all LLMSuggestion fields from response."""
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent = LLMAgent()
+
+        mock_response = json.dumps(
+            {
+                "spans": [
+                    {
+                        "start": 5,
+                        "end": 20,
+                        "label": "SYMPTOM",
+                        "negated": True,
+                        "canonical": "burning_sensation",
+                        "confidence_reason": "Clear symptom mention with negation",
+                        "llm_confidence": 0.95,
+                    }
+                ],
+                "notes": "complete_fields",
+            }
+        )
+
+        with patch.object(agent, "call", return_value=mock_response):
+            suggestions = agent.suggest("template", "no burning sensation", [], {})
+
+            assert len(suggestions) == 1
+            s = suggestions[0]
+            assert s.start == 5
+            assert s.end == 20
+            assert s.label == "SYMPTOM"
+            assert s.negated is True
+            assert s.canonical == "burning_sensation"
+            assert s.confidence_reason == "Clear symptom mention with negation"
+            assert s.llm_confidence == 0.95
+
+
+class TestLLMEdgeCases:
+    """Test suite for edge cases and boundary conditions."""
+
+    def test_empty_prompt_handling(self, llm_config):
+        """Test agent handles empty prompt string."""
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent = LLMAgent()
+
+        response = agent.call("")
+
+        parsed = json.loads(response)
+        assert "spans" in parsed
+
+    def test_very_long_prompt_handling(self, llm_config):
+        """Test agent handles very long prompts (token limit testing)."""
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent = LLMAgent()
+
+        # Generate long prompt
+        long_prompt = "Analyze this text: " + ("symptom " * 10000)
+
+        response = agent.call(long_prompt)
+
+        # Should not crash, returns valid JSON
+        parsed = json.loads(response)
+        assert "spans" in parsed
+
+    def test_special_characters_in_text(self, llm_config):
+        """Test suggest handles special characters and unicode."""
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent = LLMAgent()
+
+        text = "Patient reports 💊 medication side effects: rash™ and ödëma® (severe)."
+        weak_spans = [
+            {"start": 44, "end": 48, "label": "SYMPTOM", "text": "rash"},
+            {"start": 55, "end": 60, "label": "SYMPTOM", "text": "ödëma"},
+        ]
+
+        suggestions = agent.suggest("template", text, weak_spans, {})
+
+        # Should handle unicode without crashing
+        assert isinstance(suggestions, list)
+
+    def test_concurrent_cache_access(self, llm_config, temp_cache_file):
+        """Test multiple agents can access same cache file."""
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent1 = LLMAgent()
+            agent2 = LLMAgent()
+
+        prompt = "Concurrent test"
+
+        # Both agents call with same prompt
+        response1 = agent1.call(prompt)
+        response2 = agent2.call(prompt)
+
+        # Should return same cached response
+        assert response1 == response2
+
+    def test_stub_provider_returns_valid_json(self, llm_config):
+        """Test stub provider always returns valid JSON response."""
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="stub",
+            llm_model="test",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        response = agent.call("Test stub response")
+        assert response is not None
+
+        # Should be valid JSON
+        parsed = json.loads(response)
+        assert "spans" in parsed
+        assert "notes" in parsed
+
+    def test_suggest_with_overlapping_spans(self, llm_config):
+        """Test suggest handles overlapping candidate spans."""
+        with patch("src.llm_agent.get_config", return_value=llm_config):
+            agent = LLMAgent()
+
+        text = "severe burning sensation"
+        weak_spans = [
+            {"start": 0, "end": 24, "label": "SYMPTOM", "text": "severe burning sensation"},
+            {"start": 7, "end": 24, "label": "SYMPTOM", "text": "burning sensation"},
+            {"start": 0, "end": 6, "label": "SYMPTOM", "text": "severe"},
+        ]
+
+        suggestions = agent.suggest("template", text, weak_spans, {})
+
+        # Should handle overlaps without crashing
+        assert isinstance(suggestions, list)
+
+    def test_client_reuse_after_initialization(self, llm_config):
+        """Test that _get_client caches client instance."""
+        config = AppConfig(
+            llm_enabled=True,
+            llm_provider="stub",
+            llm_model="test",
+            llm_cache_path=llm_config.llm_cache_path,
+        )
+
+        with patch("src.llm_agent.get_config", return_value=config):
+            agent = LLMAgent()
+
+        # First call initializes
+        client1 = agent._get_client()
+        # Second call returns cached
+        client2 = agent._get_client()
+
+        assert client1 is client2

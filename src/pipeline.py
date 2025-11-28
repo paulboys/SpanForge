@@ -12,7 +12,7 @@ from transformers import AutoTokenizer, BatchEncoding
 
 from .config import AppConfig
 from .model import encode_text, get_model, get_tokenizer
-from .weak_label import (
+from .weak_labeling import (
     load_product_lexicon,
     load_symptom_lexicon,
     persist_weak_labels_jsonl,

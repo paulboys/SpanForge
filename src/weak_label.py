@@ -1,6 +1,11 @@
 """
 Weak labeling for biomedical named entity recognition.
 
+**DEPRECATION NOTICE**: This module has been refactored into `src.weak_labeling` package.
+For new code, please use: `from src.weak_labeling import weak_label`
+This compatibility module will be maintained through version 0.2.x but may be
+removed in version 0.3.0.
+
 This module implements lexicon-based fuzzy matching with rule-based filters
 for automated span extraction. Suitable for bootstrapping annotation, active
 learning, and evaluation baselines.
@@ -310,22 +315,45 @@ def _deduplicate_spans(spans: List[Span]) -> List[Span]:
     return deduplicated
 
 
-def match_symptoms(
+def _match_entities(
     text: str,
     lexicon: List[LexiconEntry],
+    label: str,
     fuzzy_threshold: float = 88.0,
     max_term_words: int = 6,
+    apply_negation: bool = False,
     negation_window: int = 5,
     scorer: str = "wratio",
 ) -> List[Span]:
+    """Core entity matching logic shared by match_symptoms() and match_products().
+
+    Performs lexicon-based entity extraction with fuzzy matching and optional negation detection.
+
+    Args:
+        text: Input text to extract entities from
+        lexicon: List of lexicon entries to match against
+        label: Entity label to assign ("SYMPTOM" or "PRODUCT")
+        fuzzy_threshold: Minimum fuzzy match score (0-100), default 88.0
+        max_term_words: Maximum words in multi-word terms, default 6
+        apply_negation: Whether to detect and flag negated entities
+        negation_window: Bidirectional window for negation cues
+        scorer: Fuzzy scorer ("wratio" or "jaccard")
+
+    Returns:
+        List of Span objects with entity mentions
+
+    Example:
+        >>> symptom_lex = load_symptom_lexicon(Path("data/lexicon/symptoms.csv"))
+        >>> spans = _match_entities(text, symptom_lex, "SYMPTOM", apply_negation=True)
+    """
     if not lexicon:
         return []
 
-    # Phase 3: Clean emojis for better matching, but keep original text for positions
-    text_for_matching = EMOJI_PATTERN.sub(" ", text)
+    # Phase 3: Clean emojis for better matching if applying negation (symptoms only)
+    text_for_matching = EMOJI_PATTERN.sub(" ", text) if apply_negation else text
 
     tokens = _tokenize(text_for_matching)
-    neg_regions = detect_negated_regions(text, window=negation_window)
+    neg_regions = detect_negated_regions(text, window=negation_window) if apply_negation else []
     spans: List[Span] = []
 
     # Build list/map of lexicon terms + metadata for rapid fuzzy searching
@@ -355,53 +383,62 @@ def match_symptoms(
             if idx == -1:
                 break
             end_idx = idx + len(term)
-            # Boundaries: ensure not partial word
             before_ok = idx == 0 or not lower_text[idx - 1].isalnum()
             after_ok = end_idx == len(lower_text) or not lower_text[end_idx].isalnum()
             if before_ok and after_ok:
-                negated = _is_negated(idx, end_idx, neg_regions)
-                # Extract from original text (not cleaned) for span text
+                # Check negation status if applicable
+                is_negated = False
+                if apply_negation:
+                    for neg_start, neg_end in neg_regions:
+                        if not (end_idx <= neg_start or idx >= neg_end):
+                            is_negated = True
+                            break
+
                 spans.append(
                     Span(
-                        text=text[idx:end_idx].strip(),
+                        text=text[idx:end_idx],
                         start=idx,
                         end=end_idx,
-                        label="SYMPTOM",
+                        label=label,
                         canonical=entry.canonical,
                         source=entry.source,
-                        concept_id=entry.concept_id,
+                        concept_id=entry.concept_id if label == "SYMPTOM" else None,
+                        sku=entry.sku if label == "PRODUCT" else None,
+                        category=entry.category if label == "PRODUCT" else None,
                         confidence=1.0,
-                        negated=negated,
+                        negated=is_negated if apply_negation else False,
                     )
                 )
             idx = end_idx
 
-    # Fuzzy single / multi-word matching by sliding window
-    # Construct candidate windows up to max_term_words
+    # Fuzzy matching (sliding window)
     for window_size in range(1, max_term_words + 1):
         for i in range(0, len(tokens) - window_size + 1):
             window_tokens = tokens[i : i + window_size]
             phrase_tokens = [t[0].lower() for t in window_tokens]
             phrase_clean = " ".join(phrase_tokens)
+
+            # Skip if already exact match
             if phrase_clean in term_map:
-                continue  # already captured exact
+                continue
+
+            # Basic filters
             if len(phrase_clean) < 3:
-                continue  # too short for fuzzy
-            # Skip pure anatomy single tokens to avoid generic matches
+                continue
             if window_size == 1 and phrase_tokens[0] in ANATOMY_TOKENS:
                 continue
-            # Require at least one non-stopword token
             if not any(tok not in STOPWORDS for tok in phrase_tokens):
                 continue
-            # Require at least one token length > 3 for semantic signal
             if not any(len(tok) > 3 for tok in phrase_tokens if tok not in STOPWORDS):
                 continue
-            # Skip phrases spanning punctuation boundaries (comma/period/semicolon) to reduce drift
+
             span_text = text[window_tokens[0][1] : window_tokens[-1][2]]
             if any(p in span_text for p in [",", ";", "."]):
                 continue
+
             phrase_tok_len = len(phrase_tokens)
-            # Candidates must share first token and have similar length
+
+            # Candidate filtering: first token match + similar length
             candidates = [
                 m["term"]
                 for m in term_meta
@@ -409,7 +446,8 @@ def match_symptoms(
             ]
             if not candidates:
                 continue
-            # Ensure token overlap (non-stopword) with candidate before scoring
+
+            # Jaccard token-set filter
             content_phrase = {tok for tok in phrase_tokens if tok not in STOPWORDS}
             filtered_candidates = []
             for c in candidates:
@@ -418,17 +456,18 @@ def match_symptoms(
                 overlap = content_phrase & content_c
                 if not overlap:
                     continue
-                # Require at least 50% overlap relative to smaller set
                 min_size = min(len(content_phrase), len(content_c)) or 1
                 if len(overlap) / min_size < 0.5:
                     continue
-                # Require last token alignment for multi-token phrases
+                # Last-token alignment filter
                 if phrase_tok_len > 1 and c_tokens[-1] != phrase_tokens[-1]:
                     continue
                 filtered_candidates.append(c)
+
             if not filtered_candidates:
                 continue
-            # Use selected scorer without dynamic threshold relaxation
+
+            # Fuzzy matching with RapidFuzz or difflib fallback
             cutoff = fuzzy_threshold
             if HAVE_RAPIDFUZZ:
                 if scorer == "jaccard":
@@ -458,30 +497,77 @@ def match_symptoms(
                         score = ratio
                 if matched_term is None:
                     continue
-            # Jaccard gate (token-set) to enforce semantic overlap
+
+            # Jaccard gate
             jaccard = _jaccard_token_score(phrase_clean, matched_term)
             if jaccard < 40.0:
                 continue
+
             entry = term_map[matched_term]
             start = window_tokens[0][1]
             end = window_tokens[-1][2]
-            negated = _is_negated(start, end, neg_regions)
+
+            # Check negation status if applicable
+            is_negated = False
+            if apply_negation:
+                for neg_start, neg_end in neg_regions:
+                    if not (end <= neg_start or start >= neg_end):
+                        is_negated = True
+                        break
+
             spans.append(
                 Span(
                     text=text[start:end],
                     start=start,
                     end=end,
-                    label="SYMPTOM",
+                    label=label,
                     canonical=entry.canonical,
                     source=entry.source,
-                    concept_id=entry.concept_id,
+                    concept_id=entry.concept_id if label == "SYMPTOM" else None,
+                    sku=entry.sku if label == "PRODUCT" else None,
+                    category=entry.category if label == "PRODUCT" else None,
                     confidence=min(1.0, (score / 100.0) * 0.8 + (jaccard / 100.0) * 0.2),
-                    negated=negated,
+                    negated=is_negated if apply_negation else False,
                 )
             )
 
     # Deduplicate exact duplicate spans, preserve overlapping contextual mentions
     return _deduplicate_spans(spans)
+
+
+def match_symptoms(
+    text: str,
+    lexicon: List[LexiconEntry],
+    fuzzy_threshold: float = 88.0,
+    max_term_words: int = 6,
+    negation_window: int = 5,
+    scorer: str = "wratio",
+) -> List[Span]:
+    """Match symptom entities with negation detection.
+
+    Wrapper around _match_entities() with negation enabled.
+
+    Args:
+        text: Input text to extract symptoms from.
+        lexicon: List of symptom lexicon entries.
+        fuzzy_threshold: Minimum fuzzy match score (0-100).
+        max_term_words: Maximum tokens per candidate phrase.
+        negation_window: Token window for bidirectional negation.
+        scorer: Fuzzy scoring method ('wratio' or 'jaccard').
+
+    Returns:
+        List of symptom spans with negation flags.
+    """
+    return _match_entities(
+        text=text,
+        lexicon=lexicon,
+        label="SYMPTOM",
+        fuzzy_threshold=fuzzy_threshold,
+        max_term_words=max_term_words,
+        apply_negation=True,
+        negation_window=negation_window,
+        scorer=scorer,
+    )
 
 
 def match_products(
@@ -491,149 +577,29 @@ def match_products(
     max_term_words: int = 6,
     scorer: str = "wratio",
 ) -> List[Span]:
-    if not lexicon:
-        return []
-    tokens = _tokenize(text)
-    spans: List[Span] = []
+    """Match product entities without negation detection.
 
-    # Build term map + metadata
-    term_map = {e.term.lower(): e for e in lexicon}
-    term_meta = []
-    for e in lexicon:
-        t = e.term.lower()
-        toks = t.split()
-        term_meta.append(
-            {
-                "term": t,
-                "tok_len": len(toks),
-                "first": toks[0] if toks else "",
-            }
-        )
-    term_list = [m["term"] for m in term_meta]
-    max_tok_len = max((m["tok_len"] for m in term_meta), default=0)
+    Wrapper around _match_entities() with negation disabled.
 
-    # Exact phrase matching
-    lower_text = text.lower()
-    for entry in lexicon:
-        term = entry.term.lower()
-        idx = 0
-        while True:
-            idx = lower_text.find(term, idx)
-            if idx == -1:
-                break
-            end_idx = idx + len(term)
-            before_ok = idx == 0 or not lower_text[idx - 1].isalnum()
-            after_ok = end_idx == len(lower_text) or not lower_text[end_idx].isalnum()
-            if before_ok and after_ok:
-                spans.append(
-                    Span(
-                        text=text[idx:end_idx],
-                        start=idx,
-                        end=end_idx,
-                        label="PRODUCT",
-                        canonical=entry.canonical,
-                        source=entry.source,
-                        sku=entry.sku,
-                        category=entry.category,
-                        confidence=1.0,
-                    )
-                )
-            idx = end_idx
+    Args:
+        text: Input text to extract products from.
+        lexicon: List of product lexicon entries.
+        fuzzy_threshold: Minimum fuzzy match score (0-100).
+        max_term_words: Maximum tokens per candidate phrase.
+        scorer: Fuzzy scoring method ('wratio' or 'jaccard').
 
-    # Fuzzy matching
-    for window_size in range(1, max_term_words + 1):
-        for i in range(0, len(tokens) - window_size + 1):
-            window_tokens = tokens[i : i + window_size]
-            phrase_tokens = [t[0].lower() for t in window_tokens]
-            phrase_clean = " ".join(phrase_tokens)
-            if phrase_clean in term_map:
-                continue
-            if len(phrase_clean) < 3:
-                continue
-            if window_size == 1 and phrase_tokens[0] in ANATOMY_TOKENS:
-                continue
-            if not any(tok not in STOPWORDS for tok in phrase_tokens):
-                continue
-            if not any(len(tok) > 3 for tok in phrase_tokens if tok not in STOPWORDS):
-                continue
-            span_text = text[window_tokens[0][1] : window_tokens[-1][2]]
-            if any(p in span_text for p in [",", ";", "."]):
-                continue
-            phrase_tok_len = len(phrase_tokens)
-            candidates = [
-                m["term"]
-                for m in term_meta
-                if m["first"] == phrase_tokens[0] and abs(m["tok_len"] - phrase_tok_len) <= 1
-            ]
-            if not candidates:
-                continue
-            content_phrase = {tok for tok in phrase_tokens if tok not in STOPWORDS}
-            filtered_candidates = []
-            for c in candidates:
-                c_tokens = c.split()
-                content_c = {ct for ct in c_tokens if ct not in STOPWORDS}
-                overlap = content_phrase & content_c
-                if not overlap:
-                    continue
-                min_size = min(len(content_phrase), len(content_c)) or 1
-                if len(overlap) / min_size < 0.5:
-                    continue
-                if phrase_tok_len > 1 and c_tokens[-1] != phrase_tokens[-1]:
-                    continue
-                filtered_candidates.append(c)
-            if not filtered_candidates:
-                continue
-            cutoff = fuzzy_threshold
-            if HAVE_RAPIDFUZZ:
-                if scorer == "jaccard":
-                    best = process.extractOne(
-                        phrase_clean,
-                        filtered_candidates,
-                        scorer=lambda a, b: _jaccard_token_score(a, b),
-                        score_cutoff=cutoff,
-                    )
-                else:
-                    best = process.extractOne(
-                        phrase_clean, filtered_candidates, scorer=fuzz.WRatio, score_cutoff=cutoff
-                    )
-                if not best:
-                    continue
-                matched_term, score, _ = best
-            else:
-                matched_term = None
-                score = 0.0
-                for candidate in filtered_candidates:
-                    if scorer == "jaccard":
-                        ratio = _jaccard_token_score(phrase_clean, candidate)
-                    else:
-                        ratio = difflib.SequenceMatcher(None, phrase_clean, candidate).ratio() * 100
-                    if ratio >= cutoff and ratio > score:
-                        matched_term = candidate
-                        score = ratio
-                if matched_term is None:
-                    continue
-            jaccard = _jaccard_token_score(phrase_clean, matched_term)
-            if jaccard < 40.0:
-                continue
-            entry = term_map[matched_term]
-            start = window_tokens[0][1]
-            end = window_tokens[-1][2]
-            spans.append(
-                Span(
-                    text=text[start:end],
-                    start=start,
-                    end=end,
-                    label="PRODUCT",
-                    canonical=entry.canonical,
-                    source=entry.source,
-                    sku=entry.sku,
-                    category=entry.category,
-                    confidence=min(1.0, (score / 100.0) * 0.8 + (jaccard / 100.0) * 0.2),
-                )
-            )
-
-    # Deduplicate exact duplicate spans, preserve overlapping contextual mentions
-    return _deduplicate_spans(spans)
+    Returns:
+        List of product spans.
+    """
+    return _match_entities(
+        text=text,
+        lexicon=lexicon,
+        label="PRODUCT",
+        fuzzy_threshold=fuzzy_threshold,
+        max_term_words=max_term_words,
+        apply_negation=False,
+        scorer=scorer,
+    )
 
 
 def assemble_spans(symptom_spans: List[Span], product_spans: List[Span]) -> List[Span]:
