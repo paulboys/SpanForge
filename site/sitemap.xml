@@ -2,130 +2,110 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://paulboys.github.io/SpanForge/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/annotation_guide/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/ci_cd/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/configuration/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/heuristic/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/installation/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
-         <loc>https://paulboys.github.io/SpanForge/llm_evaluation/</loc>
-         <lastmod>2025-11-26</lastmod>
-    </url>
-    <url>
-         <loc>https://paulboys.github.io/SpanForge/llm_providers/</loc>
-         <lastmod>2025-11-26</lastmod>
-    </url>
-    <url>
-         <loc>https://paulboys.github.io/SpanForge/options_abc_summary/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <loc>https://paulboys.github.io/SpanForge/llm_integration/</loc>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/overview/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
-         <loc>https://paulboys.github.io/SpanForge/phase_4.5_summary/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <loc>https://paulboys.github.io/SpanForge/phase_6_checklist/</loc>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
-         <loc>https://paulboys.github.io/SpanForge/phase_5_options_1_2_summary/</loc>
-         <lastmod>2025-11-26</lastmod>
-    </url>
-    <url>
-         <loc>https://paulboys.github.io/SpanForge/phase_5_plan/</loc>
-         <lastmod>2025-11-26</lastmod>
-    </url>
-    <url>
-         <loc>https://paulboys.github.io/SpanForge/production_evaluation/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <loc>https://paulboys.github.io/SpanForge/phase_6_gold_standard/</loc>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/production_workflow/</loc>
-         <lastmod>2025-11-26</lastmod>
-    </url>
-    <url>
-         <loc>https://paulboys.github.io/SpanForge/prompting_llm/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/quickstart/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/tutorial_labeling/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/about/changelog/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/about/license/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/about/roadmap/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/api/config/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/api/llm_agent/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/api/model/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/api/pipeline/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/api/weak_label/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/development/contributing/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/development/testing/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/user-guide/annotation/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/user-guide/negation/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/user-guide/pipeline/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
     <url>
          <loc>https://paulboys.github.io/SpanForge/user-guide/weak-labeling/</loc>
-         <lastmod>2025-11-26</lastmod>
+         <lastmod>2025-11-28</lastmod>
     </url>
 </urlset>

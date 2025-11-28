@@ -301,7 +301,7 @@ From `production_workflow.md`:
 - **Evaluation Script**: `scripts/annotation/evaluate_llm_refinement.py`
 - **Visualization**: `scripts/annotation/plot_llm_metrics.py`
 - **CLI Integration**: `scripts/annotation/cli.py` (evaluate-llm, plot-metrics)
-- **Test Coverage**: 186 tests (100% passing)
+- **Test Coverage**: 296 tests (99.3% passing; 1 flaky performance test)
 
 ### Pending Phase 5 Components (Referenced in Workflow)
 

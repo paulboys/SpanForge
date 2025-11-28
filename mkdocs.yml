@@ -54,6 +54,7 @@ plugins:
             group_by_category: true
             show_signature_annotations: true
             separate_signature: true
+  
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -119,6 +120,8 @@ nav:
     - Roadmap: about/roadmap.md
     - Changelog: about/changelog.md
     - License: about/license.md
+not_in_nav: |
+  archive/.*
 
 extra:
   social:
