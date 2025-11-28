@@ -30,6 +30,7 @@ class AppConfig(BaseSettings):
         llm_enabled: Enable experimental LLM refinement pipeline
         llm_provider: LLM provider name ('stub', 'openai', 'azure', 'anthropic')
         llm_model: LLM model identifier
+        llm_temperature: Temperature for LLM sampling (0.0-2.0, lower = more deterministic)
         llm_min_confidence: Minimum confidence threshold for LLM suggestions
         llm_cache_path: Path to LLM response cache file
         llm_prompt_version: Version identifier for prompt templates
@@ -44,6 +45,7 @@ class AppConfig(BaseSettings):
     llm_enabled: bool = False
     llm_provider: str = "stub"
     llm_model: str = "gpt-4"
+    llm_temperature: float = 0.1
     llm_min_confidence: float = 0.65
     llm_cache_path: str = "data/annotation/exports/llm_cache.jsonl"
     llm_prompt_version: str = "v1"

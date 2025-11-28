@@ -65,6 +65,7 @@ class LLMAgent:
         provider: LLM provider name ('stub', 'openai', 'azure', 'anthropic')
         model: Model identifier for the LLM
         min_conf: Minimum confidence threshold for accepting suggestions
+        temperature: Temperature for LLM sampling (0.0-2.0, lower = more deterministic)
         cache_path: Path to JSONL cache file for LLM responses
         _client: Lazily initialized API client
 
@@ -93,6 +94,7 @@ class LLMAgent:
         self.provider: str = cfg.llm_provider
         self.model: str = cfg.llm_model
         self.min_conf: float = cfg.llm_min_confidence
+        self.temperature: float = cfg.llm_temperature
         self.cache_path: Path = Path(cfg.llm_cache_path)
         self._client: Any = None
         self._cache: Dict[str, str] = {}
@@ -249,7 +251,7 @@ class LLMAgent:
                         },
                         {"role": "user", "content": prompt},
                     ],
-                    temperature=0.3,
+                    temperature=self.temperature,
                     response_format={"type": "json_object"},
                 )
                 return completion.choices[0].message.content or "{}"
@@ -266,7 +268,7 @@ class LLMAgent:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.3,
+                temperature=self.temperature,
                 response_format={"type": "json_object"},
             )
             return completion.choices[0].message.content or "{}"
@@ -295,7 +297,7 @@ class LLMAgent:
                 message = client.messages.create(
                     model=self.model,
                     max_tokens=2048,
-                    temperature=0.3,
+                    temperature=self.temperature,
                     system="You are a medical NER expert. Analyze text and suggest entity spans in JSON format.",
                     messages=[{"role": "user", "content": prompt}],
                 )
@@ -306,7 +308,7 @@ class LLMAgent:
             message = client.messages.create(
                 model=self.model,
                 max_tokens=2048,
-                temperature=0.3,
+                temperature=self.temperature,
                 system="You are a medical NER expert. Analyze text and suggest entity spans in JSON format.",
                 messages=[{"role": "user", "content": prompt}],
             )
