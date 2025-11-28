@@ -82,13 +82,12 @@ def simple_inference(texts: List[str], persist_path: Optional[str] = None) -> Li
     Returns:
         List of dictionaries containing:
             - token_count: Number of tokens in text
-            - weak_spans: List of detected symptom/product spans with metadata
+            - weak_spans: Detected symptom/product spans with metadata
 
     Example:
-        >>> texts = ["Patient has severe rash and headache"]
-        >>> results = simple_inference(texts, persist_path="output.jsonl")
-        >>> print(results[0]['weak_spans'])
-        [{'text': 'rash', 'label': 'SYMPTOM', ...}]
+        Running on a single text returns a record where the spans field
+        contains detected entities and their positions, labels, canonical
+        forms, confidence, and negation flags.
     """
     config = AppConfig()
     tokenizer = get_tokenizer(config)

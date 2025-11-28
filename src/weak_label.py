@@ -19,13 +19,8 @@ Key Features:
     - Confidence scoring (0.8×fuzzy + 0.2×jaccard)
 
 Typical Usage:
-    >>> from src.weak_label import match_symptoms, load_symptom_lexicon
-    >>> lexicon_entries = load_symptom_lexicon(Path("data/lexicon/symptoms.csv"))
-    >>> lexicon_terms = [entry.term for entry in lexicon_entries]
-    >>> text = "Patient has severe itching"
-    >>> spans = match_symptoms(text, lexicon_terms)
-    >>> print(spans[0]["text"], spans[0]["label"], spans[0]["confidence"])
-    severe itching SYMPTOM 0.92
+    Load a symptom lexicon, match entities in text, and inspect the
+    first span's text, label, and confidence.
 
 See Also:
     - User Guide: docs/user-guide/weak-labeling.md
