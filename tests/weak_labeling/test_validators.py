@@ -59,8 +59,24 @@ class TestDeduplicateSpans:
     def test_no_duplicates(self):
         """Test with unique spans."""
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
-            Span(text="redness", start=10, end=17, label="SYMPTOM", canonical="Redness", confidence=0.8, negated=False),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="redness",
+                start=10,
+                end=17,
+                label="SYMPTOM",
+                canonical="Redness",
+                confidence=0.8,
+                negated=False,
+            ),
         ]
         deduped = deduplicate_spans(spans)
         assert len(deduped) == 2
@@ -68,8 +84,24 @@ class TestDeduplicateSpans:
     def test_exact_duplicates(self):
         """Test with exact duplicate spans (same start/end/canonical)."""
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning Sensation", confidence=0.85, negated=False),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.85,
+                negated=False,
+            ),
         ]
         deduped = deduplicate_spans(spans)
         assert len(deduped) == 1
@@ -78,8 +110,24 @@ class TestDeduplicateSpans:
     def test_same_position_different_canonical(self):
         """Test spans at same position with different canonicals."""
         spans = [
-            Span(text="burn", start=0, end=4, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
-            Span(text="burn", start=0, end=4, label="SYMPTOM", canonical="Burn", confidence=0.8, negated=False),
+            Span(
+                text="burn",
+                start=0,
+                end=4,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="burn",
+                start=0,
+                end=4,
+                label="SYMPTOM",
+                canonical="Burn",
+                confidence=0.8,
+                negated=False,
+            ),
         ]
         deduped = deduplicate_spans(spans)
         # Should keep both since different canonical forms
@@ -88,8 +136,24 @@ class TestDeduplicateSpans:
     def test_overlapping_not_duplicate(self):
         """Test that overlapping spans are not considered duplicates."""
         spans = [
-            Span(text="burning sensation", start=0, end=17, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
-            Span(text="sensation", start=8, end=17, label="SYMPTOM", canonical="Sensation", confidence=0.7, negated=False),
+            Span(
+                text="burning sensation",
+                start=0,
+                end=17,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="sensation",
+                start=8,
+                end=17,
+                label="SYMPTOM",
+                canonical="Sensation",
+                confidence=0.7,
+                negated=False,
+            ),
         ]
         deduped = deduplicate_spans(spans)
         assert len(deduped) == 2  # Both kept (overlap ≠ duplicate)
@@ -97,11 +161,51 @@ class TestDeduplicateSpans:
     def test_multiple_duplicates(self):
         """Test with multiple sets of duplicates."""
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.8, negated=False),
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.95, negated=False),
-            Span(text="redness", start=10, end=17, label="SYMPTOM", canonical="Redness", confidence=0.85, negated=False),
-            Span(text="redness", start=10, end=17, label="SYMPTOM", canonical="Redness", confidence=0.80, negated=False),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.8,
+                negated=False,
+            ),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.95,
+                negated=False,
+            ),
+            Span(
+                text="redness",
+                start=10,
+                end=17,
+                label="SYMPTOM",
+                canonical="Redness",
+                confidence=0.85,
+                negated=False,
+            ),
+            Span(
+                text="redness",
+                start=10,
+                end=17,
+                label="SYMPTOM",
+                canonical="Redness",
+                confidence=0.80,
+                negated=False,
+            ),
         ]
         deduped = deduplicate_spans(spans)
         assert len(deduped) == 2
@@ -120,8 +224,24 @@ class TestFilterOverlappingSpans:
     def test_no_overlap(self):
         """Test with non-overlapping spans."""
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),
-            Span(text="redness", start=10, end=17, label="SYMPTOM", canonical="Redness", confidence=0.8, negated=False),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="redness",
+                start=10,
+                end=17,
+                label="SYMPTOM",
+                canonical="Redness",
+                confidence=0.8,
+                negated=False,
+            ),
         ]
         filtered = filter_overlapping_spans(spans, strategy="longest")
         assert len(filtered) == 2
@@ -129,8 +249,24 @@ class TestFilterOverlappingSpans:
     def test_overlap_keep_longest(self):
         """Test keeping longest span when overlapping."""
         spans = [
-            Span(text="burning sensation", start=0, end=17, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
-            Span(text="sensation", start=8, end=17, label="SYMPTOM", canonical="Sensation", confidence=0.8, negated=False),
+            Span(
+                text="burning sensation",
+                start=0,
+                end=17,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="sensation",
+                start=8,
+                end=17,
+                label="SYMPTOM",
+                canonical="Sensation",
+                confidence=0.8,
+                negated=False,
+            ),
         ]
         filtered = filter_overlapping_spans(spans, strategy="longest")
         assert len(filtered) == 1
@@ -139,8 +275,24 @@ class TestFilterOverlappingSpans:
     def test_overlap_keep_highest_confidence(self):
         """Test keeping highest confidence span when overlapping."""
         spans = [
-            Span(text="burning sensation", start=0, end=17, label="SYMPTOM", canonical="Burning Sensation", confidence=0.85, negated=False),
-            Span(text="sensation", start=8, end=17, label="SYMPTOM", canonical="Sensation", confidence=0.95, negated=False),
+            Span(
+                text="burning sensation",
+                start=0,
+                end=17,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.85,
+                negated=False,
+            ),
+            Span(
+                text="sensation",
+                start=8,
+                end=17,
+                label="SYMPTOM",
+                canonical="Sensation",
+                confidence=0.95,
+                negated=False,
+            ),
         ]
         filtered = filter_overlapping_spans(spans, strategy="highest_confidence")
         assert len(filtered) == 1
@@ -149,8 +301,24 @@ class TestFilterOverlappingSpans:
     def test_overlap_keep_first(self):
         """Test keeping first span when overlapping."""
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.8, negated=False),
-            Span(text="burning sensation", start=0, end=17, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.8,
+                negated=False,
+            ),
+            Span(
+                text="burning sensation",
+                start=0,
+                end=17,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
         ]
         filtered = filter_overlapping_spans(spans, strategy="first")
         assert len(filtered) == 1
@@ -159,10 +327,42 @@ class TestFilterOverlappingSpans:
     def test_multiple_overlapping_groups(self):
         """Test with multiple groups of overlapping spans."""
         spans = [
-            Span(text="burning sensation", start=0, end=17, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.8, negated=False),
-            Span(text="redness", start=20, end=27, label="SYMPTOM", canonical="Redness", confidence=0.85, negated=False),
-            Span(text="red", start=20, end=23, label="SYMPTOM", canonical="Red", confidence=0.7, negated=False),
+            Span(
+                text="burning sensation",
+                start=0,
+                end=17,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.8,
+                negated=False,
+            ),
+            Span(
+                text="redness",
+                start=20,
+                end=27,
+                label="SYMPTOM",
+                canonical="Redness",
+                confidence=0.85,
+                negated=False,
+            ),
+            Span(
+                text="red",
+                start=20,
+                end=23,
+                label="SYMPTOM",
+                canonical="Red",
+                confidence=0.7,
+                negated=False,
+            ),
         ]
         filtered = filter_overlapping_spans(spans, strategy="longest")
         assert len(filtered) == 2
@@ -172,8 +372,24 @@ class TestFilterOverlappingSpans:
     def test_partial_overlap(self):
         """Test detection of partial overlaps."""
         spans = [
-            Span(text="severe burning", start=0, end=14, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),
-            Span(text="burning sensation", start=7, end=24, label="SYMPTOM", canonical="Burning Sensation", confidence=0.85, negated=False),
+            Span(
+                text="severe burning",
+                start=0,
+                end=14,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="burning sensation",
+                start=7,
+                end=24,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.85,
+                negated=False,
+            ),
         ]
         filtered = filter_overlapping_spans(spans, strategy="longest")
         # "burning" (7-14) overlaps, keep longer
@@ -183,9 +399,33 @@ class TestFilterOverlappingSpans:
     def test_nested_spans(self):
         """Test with completely nested spans."""
         spans = [
-            Span(text="severe burning sensation pain", start=0, end=30, label="SYMPTOM", canonical="Burning", confidence=0.7, negated=False),
-            Span(text="burning sensation", start=7, end=24, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
-            Span(text="burning", start=7, end=14, label="SYMPTOM", canonical="Burning", confidence=0.8, negated=False),
+            Span(
+                text="severe burning sensation pain",
+                start=0,
+                end=30,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.7,
+                negated=False,
+            ),
+            Span(
+                text="burning sensation",
+                start=7,
+                end=24,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="burning",
+                start=7,
+                end=14,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.8,
+                negated=False,
+            ),
         ]
         filtered = filter_overlapping_spans(spans, strategy="longest")
         assert len(filtered) == 1
@@ -195,7 +435,17 @@ class TestFilterOverlappingSpans:
 
     def test_invalid_strategy(self):
         """Test that invalid strategy raises error."""
-        spans = [Span(text="test", start=0, end=4, label="SYMPTOM", canonical="Test", confidence=0.9, negated=False)]
+        spans = [
+            Span(
+                text="test",
+                start=0,
+                end=4,
+                label="SYMPTOM",
+                canonical="Test",
+                confidence=0.9,
+                negated=False,
+            )
+        ]
         with pytest.raises(ValueError):
             filter_overlapping_spans(spans, strategy="invalid")
 
@@ -212,8 +462,24 @@ class TestValidateSpanAlignment:
         """Test with correctly aligned spans."""
         text = "I have burning sensation"
         spans = [
-            Span(text="burning", start=7, end=14, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),
-            Span(text="sensation", start=15, end=24, label="SYMPTOM", canonical="Sensation", confidence=0.8, negated=False),
+            Span(
+                text="burning",
+                start=7,
+                end=14,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="sensation",
+                start=15,
+                end=24,
+                label="SYMPTOM",
+                canonical="Sensation",
+                confidence=0.8,
+                negated=False,
+            ),
         ]
         is_valid, errors = validate_span_alignment(text, spans)
         assert is_valid is True
@@ -223,8 +489,24 @@ class TestValidateSpanAlignment:
         """Test with misaligned span (indices don't match text)."""
         text = "I have burning sensation"
         spans = [
-            Span(text="burning", start=7, end=14, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),  # Correct
-            Span(text="sensation", start=16, end=25, label="SYMPTOM", canonical="Sensation", confidence=0.8, negated=False),  # Wrong indices
+            Span(
+                text="burning",
+                start=7,
+                end=14,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),  # Correct
+            Span(
+                text="sensation",
+                start=16,
+                end=25,
+                label="SYMPTOM",
+                canonical="Sensation",
+                confidence=0.8,
+                negated=False,
+            ),  # Wrong indices
         ]
         is_valid, errors = validate_span_alignment(text, spans)
         assert is_valid is False
@@ -235,7 +517,15 @@ class TestValidateSpanAlignment:
         """Test with span extending beyond text."""
         text = "burning"
         spans = [
-            Span(text="burning sensation", start=0, end=17, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
+            Span(
+                text="burning sensation",
+                start=0,
+                end=17,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
         ]
         is_valid, errors = validate_span_alignment(text, spans)
         assert is_valid is False
@@ -245,7 +535,15 @@ class TestValidateSpanAlignment:
         """Test with negative indices."""
         text = "burning sensation"
         spans = [
-            Span(text="burning", start=-5, end=7, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),
+            Span(
+                text="burning",
+                start=-5,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),
         ]
         is_valid, errors = validate_span_alignment(text, spans)
         assert is_valid is False
@@ -254,7 +552,15 @@ class TestValidateSpanAlignment:
         """Test with start > end."""
         text = "burning sensation"
         spans = [
-            Span(text="burning", start=7, end=0, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),
+            Span(
+                text="burning",
+                start=7,
+                end=0,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),
         ]
         is_valid, errors = validate_span_alignment(text, spans)
         assert is_valid is False
@@ -263,9 +569,33 @@ class TestValidateSpanAlignment:
         """Test with multiple alignment errors."""
         text = "burning sensation"
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),  # Correct
-            Span(text="sensation", start=10, end=17, label="SYMPTOM", canonical="Sensation", confidence=0.8, negated=False),  # Wrong (should be 8-17)
-            Span(text="pain", start=20, end=24, label="SYMPTOM", canonical="Pain", confidence=0.7, negated=False),  # Out of bounds
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),  # Correct
+            Span(
+                text="sensation",
+                start=10,
+                end=17,
+                label="SYMPTOM",
+                canonical="Sensation",
+                confidence=0.8,
+                negated=False,
+            ),  # Wrong (should be 8-17)
+            Span(
+                text="pain",
+                start=20,
+                end=24,
+                label="SYMPTOM",
+                canonical="Pain",
+                confidence=0.7,
+                negated=False,
+            ),  # Out of bounds
         ]
         is_valid, errors = validate_span_alignment(text, spans)
         assert is_valid is False
@@ -274,7 +604,15 @@ class TestValidateSpanAlignment:
     def test_empty_text(self):
         """Test with empty text."""
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            ),
         ]
         is_valid, errors = validate_span_alignment("", spans)
         assert is_valid is False
@@ -316,13 +654,33 @@ class TestEdgeCases:
 
     def test_deduplicate_single_span(self):
         """Test deduplication with single span."""
-        spans = [Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False)]
+        spans = [
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            )
+        ]
         deduped = deduplicate_spans(spans)
         assert len(deduped) == 1
 
     def test_filter_overlapping_single_span(self):
         """Test filtering with single span."""
-        spans = [Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False)]
+        spans = [
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            )
+        ]
         filtered = filter_overlapping_spans(spans, strategy="longest")
         assert len(filtered) == 1
 
@@ -334,16 +692,50 @@ class TestEdgeCases:
     def test_validate_unicode_text(self):
         """Test validation with unicode text."""
         text = "café burning"
-        spans = [Span(text="burning", start=5, end=12, label="SYMPTOM", canonical="Burning", confidence=0.9, negated=False)]
+        spans = [
+            Span(
+                text="burning",
+                start=5,
+                end=12,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.9,
+                negated=False,
+            )
+        ]
         is_valid, errors = validate_span_alignment(text, spans)
         assert is_valid is True
 
     def test_filter_all_overlapping(self):
         """Test when all spans overlap with each other."""
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.8, negated=False),
-            Span(text="burning sensation", start=0, end=17, label="SYMPTOM", canonical="Burning Sensation", confidence=0.9, negated=False),
-            Span(text="sensation", start=8, end=17, label="SYMPTOM", canonical="Sensation", confidence=0.7, negated=False),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.8,
+                negated=False,
+            ),
+            Span(
+                text="burning sensation",
+                start=0,
+                end=17,
+                label="SYMPTOM",
+                canonical="Burning Sensation",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="sensation",
+                start=8,
+                end=17,
+                label="SYMPTOM",
+                canonical="Sensation",
+                confidence=0.7,
+                negated=False,
+            ),
         ]
         filtered = filter_overlapping_spans(spans, strategy="longest")
         assert len(filtered) == 1
@@ -352,9 +744,33 @@ class TestEdgeCases:
     def test_deduplicate_preserve_order(self):
         """Test that deduplication preserves order of first occurrence."""
         spans = [
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.8, negated=False),
-            Span(text="redness", start=10, end=17, label="SYMPTOM", canonical="Redness", confidence=0.9, negated=False),
-            Span(text="burning", start=0, end=7, label="SYMPTOM", canonical="Burning", confidence=0.85, negated=False),  # Duplicate
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.8,
+                negated=False,
+            ),
+            Span(
+                text="redness",
+                start=10,
+                end=17,
+                label="SYMPTOM",
+                canonical="Redness",
+                confidence=0.9,
+                negated=False,
+            ),
+            Span(
+                text="burning",
+                start=0,
+                end=7,
+                label="SYMPTOM",
+                canonical="Burning",
+                confidence=0.85,
+                negated=False,
+            ),  # Duplicate
         ]
         deduped = deduplicate_spans(spans)
         assert len(deduped) == 2

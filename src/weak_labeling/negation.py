@@ -32,7 +32,9 @@ NEGATION_TOKENS = {
 }
 
 
-def detect_negated_regions(text: str, window: int = 5, window_size: int = None) -> List[Tuple[int, int]]:
+def detect_negated_regions(
+    text: str, window: int = 5, window_size: int = None
+) -> List[Tuple[int, int]]:
     """Detect character ranges that are negated.
 
     Uses bidirectional windows:
@@ -65,18 +67,18 @@ def detect_negated_regions(text: str, window: int = 5, window_size: int = None) 
     # Handle backward compatibility: window_size overrides window
     if window_size is not None:
         window = window_size
-    
+
     # Handle edge cases: empty or whitespace-only text
     if not text or not text.strip():
         return []
-    
+
     # Tokenize (handles unicode and punctuation)
     tokens = tokenize(text)
-    
+
     # Empty token list (shouldn't happen after strip check, but defensive)
     if not tokens:
         return []
-    
+
     neg_spans: List[Tuple[int, int]] = []
 
     for i, (tok, s, e) in enumerate(tokens):
@@ -105,7 +107,7 @@ def detect_negated_regions(text: str, window: int = 5, window_size: int = None) 
                 back_start = back_tokens[0][1]
                 back_end = back_tokens[-1][2]
                 neg_spans.append((back_start, back_end))
-            
+
             # Edge case: if no forward and no backward tokens (e.g., text is just "no"),
             # or window_size=0, include the negation cue itself
             if (not has_forward and not has_backward) or window == 0:
@@ -155,7 +157,7 @@ def is_negated(
         return False
     if not neg_regions:
         return False
-    
+
     span_length = span_end - span_start
 
     for ns, ne in neg_regions:

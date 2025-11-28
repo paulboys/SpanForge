@@ -12,7 +12,12 @@ from pathlib import Path
 
 import pytest
 
-from src.weak_labeling.labeler import WeakLabeler, match_symptoms, match_products, persist_weak_labels_jsonl
+from src.weak_labeling.labeler import (
+    WeakLabeler,
+    match_products,
+    match_symptoms,
+    persist_weak_labels_jsonl,
+)
 from src.weak_labeling.types import LexiconEntry, Span
 
 
@@ -205,13 +210,13 @@ class TestLabelBatch:
         """Test that batch labeling matches individual labeling."""
         labeler = WeakLabeler(symptom_lexicon=sample_symptom_lexicon)
         texts = ["burning sensation", "redness and itching"]
-        
+
         # Label individually
         individual_results = [labeler.label_text(t) for t in texts]
-        
+
         # Label as batch
         batch_results = labeler.label_batch(texts)
-        
+
         # Results should be equivalent
         assert len(individual_results) == len(batch_results)
         for ind, bat in zip(individual_results, batch_results):
@@ -252,16 +257,16 @@ class TestModuleFunctions:
         """Test persist_weak_labels_jsonl module function."""
         texts = ["burning sensation", "redness"]
         spans_list = [match_symptoms(t, sample_symptom_lexicon) for t in texts]
-        
+
         output_path = tmp_path / "test.jsonl"
         persist_weak_labels_jsonl(texts, spans_list, output_path)
-        
+
         # Verify file exists and has correct structure
         assert output_path.exists()
         with open(output_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
             assert len(lines) == 2
-            
+
             # Verify JSON structure
             record1 = json.loads(lines[0])
             assert "text" in record1
@@ -272,10 +277,10 @@ class TestModuleFunctions:
         """Test persisting basic JSONL structure."""
         texts = ["burning sensation"]
         spans_list = [match_symptoms(t, sample_symptom_lexicon) for t in texts]
-        
+
         output_path = tmp_path / "test_metadata.jsonl"
         persist_weak_labels_jsonl(texts, spans_list, output_path)
-        
+
         with open(output_path, "r", encoding="utf-8") as f:
             record = json.loads(f.readline())
             assert "text" in record
@@ -350,14 +355,16 @@ class TestEdgeCases:
             assert span.start < span.end
             extracted = text[span.start : span.end]
             # Extracted text should match span text (case-insensitive)
-            assert extracted.lower() == span.text.lower(), f"Mismatch: '{extracted}' vs '{span.text}'"
+            assert (
+                extracted.lower() == span.text.lower()
+            ), f"Mismatch: '{extracted}' vs '{span.text}'"
 
     def test_overlapping_detection(self, sample_symptom_lexicon):
         """Test that overlapping matches are handled."""
         labeler = WeakLabeler(symptom_lexicon=sample_symptom_lexicon)
         text = "burning sensation"
         spans = labeler.label_text(text)
-        
+
         # Check for overlaps - overlapping spans may exist if they have different labels or sources
         # The system allows overlaps but should deduplicate within same label
         if len(spans) > 1:
@@ -365,22 +372,22 @@ class TestEdgeCases:
             # Just verify spans are returned and have valid boundaries
             for span in sorted_spans:
                 assert 0 <= span.start < span.end <= len(text)
-                assert text[span.start:span.end] == span.text
+                assert text[span.start : span.end] == span.text
 
     def test_negation_detection(self, sample_symptom_lexicon):
         """Test negation is properly detected."""
         labeler = WeakLabeler(symptom_lexicon=sample_symptom_lexicon)
-        
+
         positive_text = "burning sensation present"
         negative_text = "no burning sensation"
-        
+
         pos_spans = labeler.label_text(positive_text)
         neg_spans = labeler.label_text(negative_text)
-        
+
         # Both should detect spans
         assert len(pos_spans) > 0
         assert len(neg_spans) > 0
-        
+
         # Negative should be marked as negated
         if neg_spans:
             assert any(s.negated for s in neg_spans), "Negation not detected"
@@ -395,6 +402,7 @@ class TestEdgeCases:
     def test_different_scorers(self, sample_symptom_lexicon):
         """Test different fuzzy scoring methods."""
         import pytest
+
         # Only test wratio - jaccard scorer has implementation issues with score_cutoff
         labeler = WeakLabeler(
             symptom_lexicon=sample_symptom_lexicon,
@@ -417,36 +425,36 @@ class TestIntegration:
             fuzzy_threshold=85.0,
             negation_window=5,
         )
-        
+
         # Sample texts
         texts = [
             "After using shampoo, I developed burning sensation",
             "No redness or itching",
             "Face cream caused severe redness",
         ]
-        
+
         # Label batch
         batch_results = labeler.label_batch(texts)
         assert len(batch_results) == 3
-        
+
         # Verify first text has both product and symptom
         assert any(s.label == "PRODUCT" for s in batch_results[0])
         assert any(s.label == "SYMPTOM" for s in batch_results[0])
-        
+
         # Verify negation in second text
         if batch_results[1]:
             assert any(s.negated for s in batch_results[1])
-        
+
         # Persist to JSONL
         output_path = tmp_path / "pipeline_output.jsonl"
         persist_weak_labels_jsonl(texts, batch_results, output_path)
-        
+
         # Verify output
         assert output_path.exists()
         with open(output_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
             assert len(lines) == 3
-            
+
             # Verify structure
             for line in lines:
                 record = json.loads(line)
@@ -460,12 +468,12 @@ class TestIntegration:
             symptom_lexicon=sample_symptom_lexicon,
             product_lexicon=sample_product_lexicon,
         )
-        
+
         text = "shampoo caused burning sensation and redness"
         spans = labeler.label_text(text)
-        
+
         symptom_count = sum(1 for s in spans if s.label == "SYMPTOM")
         product_count = sum(1 for s in spans if s.label == "PRODUCT")
-        
+
         assert symptom_count >= 1, "Should detect at least one symptom"
         assert product_count >= 1, "Should detect at least one product"

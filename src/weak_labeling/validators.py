@@ -78,13 +78,13 @@ def is_anatomy_only(text: str) -> bool:
     # Handle edge cases
     if not text or not text.strip():
         return False
-    
+
     # Use composition: delegate tokenization to matchers module
     tokens = tokenize(text.strip())
-    
+
     # Extract just the token strings (tokenize returns (token, start, end) tuples)
     token_strings = [tok[0] for tok in tokens]
-    
+
     if len(token_strings) == 1 and token_strings[0].lower() in ANATOMY_TOKENS:
         return True
     return False
@@ -105,7 +105,7 @@ def _validate_single_span(text: str, span_text: str, start: int, end: int) -> bo
     # Handle empty inputs
     if not text:
         return False
-    
+
     # Validate indices: must be non-negative, in bounds, and properly ordered
     if start < 0 or end < 0:
         return False
@@ -122,10 +122,10 @@ def validate_span_alignment(
     text: str,
     span_text_or_spans: Union[str, List[Span]],
     start: Optional[int] = None,
-    end: Optional[int] = None
+    end: Optional[int] = None,
 ) -> Union[bool, Tuple[bool, List[str]]]:
     """Validate span alignment - polymorphic function using composition.
-    
+
     This function demonstrates the Strategy pattern by dispatching to different
     validation strategies based on arguments:
     - Single span validation: validate_span_alignment(text, span_text, start, end) -> bool
@@ -155,15 +155,15 @@ def validate_span_alignment(
     # Strategy 1: Batch validation (list of Span objects)
     if isinstance(span_text_or_spans, list):
         spans = span_text_or_spans
-        
+
         # Handle edge case: empty text with spans
         if not text and spans:
             return False, ["Cannot validate spans against empty text"]
-        
+
         # Handle edge case: empty spans list (valid by definition)
         if not spans:
             return True, []
-        
+
         errors = []
         for span in spans:
             # Use composition: delegate to single-span validator
@@ -171,9 +171,9 @@ def validate_span_alignment(
                 errors.append(
                     f"Span '{span.text}' at ({span.start}, {span.end}) does not match text[{span.start}:{span.end}]"
                 )
-        
+
         return len(errors) == 0, errors
-    
+
     # Strategy 2: Single span validation (requires start and end)
     else:
         span_text = span_text_or_spans
@@ -256,7 +256,7 @@ def filter_overlapping_spans(spans: List[Span], strategy: str = "longest") -> Li
         raise ValueError(
             f"Invalid strategy '{strategy}'. Must be one of: {', '.join(sorted(valid_strategies))}"
         )
-    
+
     if not spans:
         return []
 

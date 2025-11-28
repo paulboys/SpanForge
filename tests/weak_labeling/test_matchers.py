@@ -152,7 +152,7 @@ class TestFuzzyMatch:
         # Test with normalized inputs for consistent behavior
         score_normalized = fuzzy_match("burning", "burning")
         assert score_normalized == 100.0
-        
+
         # Case mismatch behavior depends on backend (WRatio is case-sensitive)
         score_case_mismatch = fuzzy_match("BURNING", "burning")
         # Just verify it returns a numeric value >= 0
