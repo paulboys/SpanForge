@@ -30,6 +30,7 @@ def get_token_cls_model(labels_path: Path = Path("labels.json")):
     labels = load_labels(labels_path)
     id2label = {i: l for i, l in enumerate(labels)}
     label2id = {l: i for i, l in enumerate(labels)}
+    # TODO(security): Pin model revision before production (Bandit B615)
     tokenizer = AutoTokenizer.from_pretrained(config.model_name)
     model = AutoModelForTokenClassification.from_pretrained(
         config.model_name,

@@ -32,6 +32,8 @@ def get_tokenizer(config: AppConfig) -> AutoTokenizer:
     """
     global _tokenizer
     if _tokenizer is None:
+        # TODO(security): Pin model revision before production (Bandit B615)
+        # Example: AutoTokenizer.from_pretrained(config.model_name, revision="3e4b9c6")
         _tokenizer = AutoTokenizer.from_pretrained(config.model_name)
     return _tokenizer
 
@@ -56,6 +58,7 @@ def get_model(config: AppConfig) -> AutoModel:
     """
     global _model
     if _model is None:
+        # TODO(security): Pin model revision before production (Bandit B615)
         _model = AutoModel.from_pretrained(config.model_name)
         _model.to(config.device)
         _model.eval()
