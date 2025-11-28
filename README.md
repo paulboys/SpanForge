@@ -3,7 +3,7 @@
 ![SpanForge Logo Light](docs/assets/SpanForge-light.svg#gh-light-mode-only)
 ![SpanForge Logo Dark](docs/assets/SpanForge-dark.svg#gh-dark-mode-only)
 
-**Biomedical NER with BioBERT and Weak Labeling**
+**Biomedical NER with BioBERT, Weak Labeling, and LLM Refinement**
 
 [![Test Suite](https://github.com/paulboys/SpanForge/actions/workflows/test.yml/badge.svg)](https://github.com/paulboys/SpanForge/actions/workflows/test.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -12,7 +12,7 @@
 
 </div>
 
-SpanForge extracts adverse events and product mentions from consumer complaints using **BioBERT embeddings**, **lexicon-driven weak labeling**, and **LLM-powered refinement** with production-ready annotation workflows.
+SpanForge extracts adverse events and product mentions from consumer complaints using **BioBERT embeddings**, **lexicon-driven weak labeling**, and **LLM-powered refinement**, with a production-ready annotation workflow built around Label Studio and comprehensive evaluation tooling.
 
 📚 **[Full Documentation](https://paulboys.github.io/SpanForge/)** | 🚀 **[Quick Start](#quick-start)** | 📖 **[Tutorial Notebook](scripts/AnnotationWalkthrough.ipynb)**
 
@@ -20,14 +20,15 @@ SpanForge extracts adverse events and product mentions from consumer complaints 
 
 ## ✨ Key Features
 
-- 🔬 **BioBERT Integration** - State-of-the-art biomedical language model
-- 📝 **Weak Labeling** - Fuzzy + exact matching with confidence scoring  
-- 🤖 **LLM Refinement** - Automated boundary correction (OpenAI, Anthropic, Azure)
-- 📊 **Evaluation Harness** - 10 metrics for measuring annotation quality
-- 🎯 **Label Studio Ready** - Production annotation workflow with tutorial
-- 🧪 **186 Tests** - 100% passing with comprehensive edge case coverage
-- ⚡ **Fast** - <100ms per document average
-- 📈 **Proven Results** - +13.4% IOU improvement over weak labels alone
+- 🔬 **BioBERT Integration**: Biomedical encoder (`dmis-lab/biobert-base-cased-v1.1`)
+- 📝 **Weak Labeling**: Fuzzy (0.88), Jaccard gate (≥40), negation window (±5), emoji handling
+- 🤖 **LLM Refinement**: Boundary correction, negation validation, canonical normalization (OpenAI, Azure OpenAI, Anthropic)
+- 📊 **Evaluation Harness**: 10 metrics (IOU, boundary precision, correction rate, calibration, P/R/F1)
+- 📈 **Visualization**: Publication-quality plots (IOU uplift, calibration, correction breakdown, P/R/F1, stratified)
+- 🎯 **Annotation Workflow**: Label Studio config + CLI scripts for import/export, consensus, quality, registry
+- 🧪 **Tests**: 296 tests total; 99.3% passing (1 flaky performance test)
+- 📕 **Docs**: 2,000+ lines with tutorials and production guides
+- ⚠️ **Security**: Bandit configured; HF `from_pretrained` revision pinning tracked (B615) for pre-prod
 
 ## 🚀 Quick Start
 
@@ -37,7 +38,7 @@ git clone https://github.com/paulboys/SpanForge.git
 cd SpanForge
 pip install -r requirements.txt
 
-# Basic usage
+# Weak label a single text
 python -c "
 from src.weak_label import load_symptom_lexicon, load_product_lexicon, weak_label
 from pathlib import Path
@@ -45,7 +46,16 @@ from pathlib import Path
 symptom_lex = load_symptom_lexicon(Path('data/lexicon/symptoms.csv'))
 product_lex = load_product_lexicon(Path('data/lexicon/products.csv'))
 
-text = 'Patient developed severe rash after using the cream'
+text = 'After using this facial moisturizer, I developed severe burning sensation and redness.'
+spans = weak_label(text, symptom_lex, product_lex)
+print(spans)"
+
+# End-to-end: pipeline → JSONL
+python -m src.pipeline --input raw_text.txt --output data/output/weak_labels.jsonl
+
+# Optional: LLM refinement
+python -m src.llm_agent --weak data/output/weak_labels.jsonl --output data/output/llm_refined.jsonl
+
 ## 📋 Workflow
 
 ```mermaid
@@ -58,16 +68,14 @@ graph LR
     F --> G[Model Training]
 ```
 
-**Phase 5 Complete** (v0.5.0):
-1. ✅ Weak labeling with confidence scoring
-2. ✅ LLM refinement (boundary correction, canonical normalization)
-3. ✅ Label Studio configuration with tutorial
-4. ✅ Production annotation workflow
-5. ✅ Evaluation harness (10 metrics)
-6. ✅ Visualization tools (6 plot types)
-7. ⏳ Token classification fine-tuning (Phase 7)Run quality metrics (`scripts/annotation/quality_report.py`).
-8. Register batch in provenance registry (`scripts/annotation/register_batch.py`).
-9. (Planned) Fine-tune token classification model on BIO-tagged gold.
+### Current Phases
+
+- ✅ Phases 1–4: Bootstrap, weak labeling, tests, CI/CD
+- ✅ Phase 4.5: LLM refinement + evaluation harness
+- ✅ Phase 5: Annotation infrastructure (Label Studio + tutorial)
+- 🚧 Phase 6: Gold standard assembly (in progress)
+- ⏳ Phase 7: Token classification fine-tune (BioBERT + head)
+- ⏳ Phase 8–10: Domain adaptation, baselines, calibration, active learning
 
 ## Architecture Overview
 ```
@@ -79,15 +87,13 @@ Human Export → Gold Converter (+canonical +provenance) → Gold JSONL → Qual
                                                     └─► Future: BIO Tagging & Model Fine-Tune
 ```
 
-## 📊 Performance
+## 📊 Benchmarks (Fixture-based)
 
-| Metric | Value |
-|--------|-------|
-| **IOU Improvement** | +13.4% (weak → LLM) |
-| **Exact Match Rate** | 100% (on test fixtures) |
-| **F1 Score** | 1.000 (LLM vs gold) |
-| **Processing Speed** | <100ms per document |
-| **Test Coverage** | 186/186 passing (100%) |
+- **IOU Improvement**: +13.4% (weak → LLM)
+- **Exact Match Rate**: 66.7% → 100.0% after refinement
+- **F1 Score**: 1.000 (LLM vs gold on fixtures)
+- **Processing Speed**: <100ms per document (small texts)
+- **Test Coverage**: 81.2% overall; 100% for `pipeline.py`, `model.py`, `model_token_cls.py`
 
 ## 📦 Project Structure
 
@@ -102,33 +108,36 @@ SpanForge/
 │   └── evaluation/        # Metrics (10 functions)
 ├── scripts/
 │   ├── AnnotationWalkthrough.ipynb  # Tutorial (7 sections)
-│   └── annotation/        # CLI tools (8 subcommands)
+│   └── annotation/        # CLI tools (bootstrap, import-weak, export-convert, quality, adjudicate, register, evaluate-llm, plot-metrics)
 ├── data/
 │   ├── lexicon/           # Symptoms & products
 │   └── annotation/        # Label Studio config
-├── tests/                 # 186 tests (100% passing)
+├── tests/                 # 296 tests (99.3% passing; 1 flaky perf test)
 └── docs/                  # 2,000+ lines of documentation
 ```
 
-## Testing
+## 🧪 Testing
 ```powershell
 pytest -q
 ```
-Focus: forward pass, weak labeling correctness, gold conversion integrity. Extend with token classification evaluation once supervised labels available.
+Focus: weak labeling edge cases, LLM refinement validation, metrics integrity, and pipeline determinism. Token classification tests will join in Phase 7.
 
-## Roadmap (Phases)
-1. Bootstrap & Lexicon ✅
-2. Weak Label Refinement ✅ (iterative)
-3. Annotation & Curation (IN PROGRESS)
-4. Gold Standard Assembly (next 100+ tasks) ⏳
-5. Token Classification Fine-Tune ⏳
-6. Domain Adaptation (MLM) ⏳
-7. Baseline Comparison (RoBERTa) ⏳
-8. Evaluation & Calibration ⏳
-9. Educational Docs Expansion ✅ (initial) / ongoing
-10. Active Learning Loop ⏳
+## 🗺️ Roadmap
+1. Bootstrap & Lexicon (DONE)
+2. Weak Label Refinement (DONE)
+3. Test Infrastructure & Edge Cases (DONE)
+4. CI/CD Integration (DONE)
+4.5. LLM-Based Refinement (DONE)
+5. Annotation & Curation (IN PROGRESS)
+6. Gold Standard Assembly (NEXT)
+7. Token Classification Fine‑Tune (PLANNED)
+8. Domain Adaptation (PLANNED)
+9. Baseline Comparison (PLANNED)
+10. Evaluation & Calibration (PARTIAL)
+11. Educational Docs Expansion (ONGOING)
+12. Continuous Improvement & Active Learning (PLANNED)
 
-## Contributing
+## 🤝 Contributing
 1. Create env & install deps.
 2. Run `scripts/verify_env.py` and tests.
 3. Inspect lexicons; propose additions via PR (no licensed MedDRA raw data).
@@ -136,7 +145,7 @@ Focus: forward pass, weak labeling correctness, gold conversion integrity. Exten
 5. Perform annotation batch locally; convert + quality + register.
 6. Submit focused PR referencing roadmap phase.
 
-## Privacy & Compliance
+## 🔐 Privacy & Compliance
 - Do NOT commit raw complaint text containing PII (keep outside `data/` or use redacted versions).
 - Telemetry disabled for Label Studio (`LABEL_STUDIO_DISABLE_TELEMETRY=1`).
 - Canonical mapping strives for consistent terminology without storing licensed vocabularies.
@@ -148,24 +157,32 @@ Focus: forward pass, weak labeling correctness, gold conversion integrity. Exten
 - Introduce evaluation harness (precision/recall/F1 on held-out gold).
 
 ## Reference Docs
-See: `docs/overview.md`, `docs/annotation_guide.md`, `docs/tutorial_labeling.md`, `docs/heuristic.md`.
+- `docs/overview.md`
+- `docs/annotation_guide.md`
+- `docs/tutorial_labeling.md`
+- `docs/heuristic.md`
+- `docs/phase_6_gold_standard.md`
+- `docs/phase_6_checklist.md`
+- `scripts/caers/README.md`
 
 ## 🗺️ Roadmap
 
 - [x] **Phase 1-4**: Bootstrap, weak labeling, testing, CI/CD
-- [x] **Phase 4.5**: LLM refinement & evaluation harness (186 tests)
+- [x] **Phase 4.5**: LLM refinement & evaluation harness (comprehensive tests)
 - [x] **Phase 5**: Annotation infrastructure (Label Studio + tutorial)
 - [ ] **Phase 6**: Gold standard assembly (500+ annotations)
 - [ ] **Phase 7**: Token classification fine-tuning
 - [ ] **Phase 8-10**: Domain adaptation, baselines, production deployment
 
-See **[Detailed Roadmap](docs/about/roadmap.md)** and **[Changelog](docs/about/changelog.md)**.## 📚 Documentation
+See **[Detailed Roadmap](docs/about/roadmap.md)** and **[Changelog](docs/about/changelog.md)**.
+
+## 📚 Documentation
 
 - **[Installation Guide](docs/installation.md)** - Setup instructions
 - **[Quick Start Tutorial](docs/quickstart.md)** - Basic usage examples
 - **[Annotation Tutorial](scripts/AnnotationWalkthrough.ipynb)** - Interactive notebook (7 sections)
 - **[Production Workflow](docs/production_workflow.md)** - Complete annotation guide (450+ lines)
-- **[LLM Evaluation](docs/llm_evaluation.md)** - Metrics reference
+- **[LLM Integration](docs/llm_integration.md)** - Provider config and usage
 - **[API Reference](https://paulboys.github.io/SpanForge/api/config/)** - Full API docs
 
 ## 🤝 Contributing
@@ -190,4 +207,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Version**: 0.5.0 | **Status**: Production Ready | **Updated**: November 25, 2025
+**Version**: 0.5.0 | **Status**: Annotation-Ready | **Updated**: November 28, 2025

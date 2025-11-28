@@ -101,7 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 8 total subcommands (bootstrap, import-weak, quality, adjudicate, register, refine-llm, evaluate-llm, plot-metrics)
 
 ### Test Coverage
-- **Total Tests**: 186 (100% passing)
+- **Total Tests**: 296 (99.3% passing; 1 flaky performance test)
   - 171 core + edge cases + integration tests (from Phase 4)
   - 15 LLM agent tests (provider validation, boundary correction, negation, caching)
   - 27 evaluation harness tests (metrics, stratification, calibration)

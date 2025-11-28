@@ -491,6 +491,6 @@ config = AppConfig(negation_window=3)
 
 ## Next Steps
 
-- [Configuration](configuration.md) - Tune thresholds
-- [Negation Guide](user-guide/negation.md) - Advanced negation patterns
-- [API Reference](api/weak_label.md) - Full function documentation
+- [Configuration](../configuration.md) - Tune thresholds
+- [Negation Guide](negation.md) - Advanced negation patterns
+- [API Reference](../api/weak_label.md) - Full function documentation

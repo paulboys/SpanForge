@@ -421,7 +421,7 @@ pip install tenacity>=8.0.0
 ### Related Guides
 - [Production Workflow](production_workflow.md) - End-to-end annotation pipeline
 - [Annotation Guide](annotation_guide.md) - Label Studio setup and best practices
-- [Evaluation Metrics](../src/evaluation/metrics.py) - Full metric definitions
+- [Evaluation Workflow](production_workflow.md) - Metrics and reporting
 
 ### Research Papers
 - Ratner et al. (2017): "Snorkel: Rapid Training Data Creation with Weak Supervision"

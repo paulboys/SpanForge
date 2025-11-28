@@ -85,6 +85,9 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Project Overview:
+    - Overview: overview.md
+    - Heuristic & Thresholds: heuristic.md
   - Getting Started:
     - Installation: installation.md
     - Quick Start: quickstart.md
@@ -99,6 +102,9 @@ nav:
     - Tutorial (Labeling): tutorial_labeling.md
     - Production Workflow: production_workflow.md
     - LLM Integration: llm_integration.md
+    - Phase 6:
+      - Gold Standard Guide: phase_6_gold_standard.md
+      - Phase 6 Checklist: phase_6_checklist.md
   - API Reference:
     - Configuration: api/config.md
     - Model: api/model.md

@@ -1,22 +1,23 @@
 # SpanForge
 
-**Biomedical Named Entity Recognition with BioBERT and Weak Labeling**
+**Biomedical Named Entity Recognition with BioBERT, Weak Labeling, and LLM Refinement**
 
 [![Test Suite](https://github.com/paulboys/SpanForge/actions/workflows/test.yml/badge.svg)](https://github.com/paulboys/SpanForge/actions/workflows/test.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-SpanForge is a production-ready biomedical NER pipeline combining BioBERT contextual embeddings with lexicon-driven weak labeling for adverse event detection in product complaints.
+SpanForge is a biomedical NER pipeline combining BioBERT contextual embeddings with lexicon-driven weak labeling and LLM-powered refinement for adverse event detection in consumer complaints. It includes an end-to-end annotation workflow (Label Studio), evaluation harness (10 metrics), and visualization tools.
 
 ## Features
 
 - 🔬 **BioBERT Integration**: State-of-the-art biomedical language model
-- 📝 **Weak Labeling**: Fuzzy + exact matching with confidence scoring
-- 🚫 **Negation Detection**: Bidirectional window with 10+ clinical cues
-- 🎯 **High Accuracy**: 98% precision on symptom detection
-- ⚡ **Fast Processing**: <100ms per document average
-- 🧪 **Well-Tested**: 186 tests with 100% pass rate (core + LLM + evaluation)
-- 🔄 **CI/CD Ready**: GitHub Actions with multi-OS/Python matrix
+- 📝 **Weak Labeling**: Fuzzy (0.88) + Jaccard gate (≥40) with confidence scoring
+- 🚫 **Negation Detection**: Bidirectional window (±5 tokens), emoji handling
+- 🤖 **LLM Refinement**: Boundary correction, negation validation, canonical normalization (OpenAI/Azure/Anthropic)
+- ⚡ **Fast Processing**: <100ms per document average (short texts)
+- 🧪 **Well-Tested**: 296 tests; 99.3% passing (1 flaky performance test)
+- 🔄 **CI/CD Ready**: GitHub Actions test + security (Bandit, Safety, CodeQL)
+- 🧰 **Data Integration**: FDA CAERS ingestion and weak labeling (`scripts/caers/download_caers.py`)
 
 ## Quick Start
 
@@ -39,7 +40,7 @@ symptom_lex = load_symptom_lexicon(Path("data/lexicon/symptoms.csv"))
 product_lex = load_product_lexicon(Path("data/lexicon/products.csv"))
 
 # Detect entities
-text = "Patient developed severe rash after using the hydra boost cream"
+text = "After using this face cream, I developed severe burning sensation and redness."
 spans = weak_label(text, symptom_lex, product_lex)
 
 for span in spans:
@@ -59,7 +60,7 @@ texts = [
     "The moisturizer caused redness and itching"
 ]
 
-results = simple_inference(texts, persist_path="output.jsonl")
+results = simple_inference(texts, persist_path="data/output/notebook_test.jsonl")
 
 for result in results:
     print(f"Found {len(result['weak_spans'])} entities")
@@ -69,12 +70,12 @@ for result in results:
 
 ```mermaid
 graph LR
-    A[Input Text] --> B[BioBERT Tokenizer]
-    B --> C[Lexicon Matcher]
-    C --> D[Negation Detector]
-    D --> E[Confidence Scorer]
-    E --> F[Span Deduplicator]
-    F --> G[Output JSONL]
+    A[Raw Text] --> B[Weak Labels]
+    B --> C[LLM Refinement]
+    C --> D[Label Studio]
+    D --> E[Gold Standard]
+    E --> F[Evaluation + Visualization]
+    F --> G[Model Training]
 ```
 
 ## Core Components
@@ -94,21 +95,18 @@ graph LR
 - **Anatomy Gating**: Skips generic single-token anatomy terms
 - **Last-Token Alignment**: Multi-token fuzzy matches require matching final token
 
-## Performance
+## Benchmarks (Fixture-based)
 
-| Metric | Value |
-|--------|-------|
-| Precision | 98% |
-| Recall | 92% |
-| F1 Score | 95% |
-| Avg. Time/Doc | 85ms |
-| 1000-Doc Batch | <2 min |
+- IOU uplift: +13.4% (weak → LLM)
+- Exact match: 66.7% → 100.0% (after refinement)
+- P/R/F1: 1.000 (LLM spans vs gold fixtures)
+- Avg. Time/Doc: <100ms (short texts)
 
 ## Testing
 
 ```bash
-# Full suite (144 tests)
-pytest tests/ -v
+# Full suite
+pytest -q
 
 # With coverage
 pytest tests/ --cov=src --cov-report=html
@@ -137,10 +135,11 @@ SpanForge/
 │   ├── weak_label.py  # Weak labeling logic
 │   ├── pipeline.py    # End-to-end pipeline
 │   └── llm_agent.py   # LLM refinement (experimental)
-├── tests/             # Test suite (144 tests)
-│   ├── edge_cases/    # 98 parametrized edge cases
-│   ├── integration/   # 26 integration tests
-│   └── assertions.py  # Test composition helpers
+├── tests/             # Test suite (296 tests)
+│   ├── fixtures/      # Annotation/evaluation fixtures
+│   ├── weak_labeling/ # Edge cases and heuristics
+│   ├── llm/           # LLM agent tests
+│   └── evaluation/    # Metrics and end-to-end checks
 ├── data/
 │   ├── lexicon/       # Symptom & product lexicons
 │   └── output/        # Pipeline outputs
@@ -155,7 +154,7 @@ SpanForge/
 - [x] Phase 2: Weak Label Refinement
 - [x] Phase 3: Test Infrastructure & Edge Cases
 - [x] Phase 4: CI/CD Integration
-- [x] Phase 4.5: LLM Refinement & Evaluation Harness (186 tests passing)
+- [x] Phase 4.5: LLM Refinement & Evaluation Harness
 - [x] Phase 5: Annotation & Curation Infrastructure (Label Studio config, tutorial, production workflow)
 - [ ] Phase 5 (continued): Batch preparation scripts, first 100-task production batch
 - [ ] Phase 6: Gold Standard Assembly (500+ annotations)
@@ -199,4 +198,4 @@ If you use SpanForge in your research, please cite:
 
 ---
 
-**Status**: Production Ready | **Version**: 0.5.0 | **Last Updated**: November 25, 2025
+**Status**: Annotation-Ready | **Version**: 0.5.0 | **Last Updated**: November 28, 2025
