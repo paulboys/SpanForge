@@ -1,3 +1,73 @@
+[project]
+name = "spanforge"
+version = "0.6.0"
+description = "Biomedical NER with BioBERT and weak labeling for adverse event extraction"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    {name = "SpanForge Contributors", email = "spanforge@example.com"}
+]
+keywords = ["ner", "biobert", "biomedical", "weak-labeling", "annotation", "adverse-events", "nlp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Text Processing :: Linguistic",
+]
+
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "typer>=0.9.0",
+    "transformers>=4.30.0",
+    "torch>=2.0.0",
+    "numpy>=1.21.0",
+    "pandas>=2.0.0",
+    "rapidfuzz>=3.0.0",
+    "pytest>=7.0.0",
+]
+
+[project.optional-dependencies]
+llm = [
+    "openai>=1.0.0",
+    "anthropic>=0.18.0",
+    "tenacity>=8.0.0",
+]
+viz = [
+    "matplotlib>=3.5.0",
+    "seaborn>=0.12.0",
+]
+dev = [
+    "pytest-cov>=4.0.0",
+    "black>=24.0.0",
+    "ruff>=0.1.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "pre-commit>=3.0.0",
+]
+all = [
+    "spanforge[llm,viz,dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/paulboys/SpanForge"
+Repository = "https://github.com/paulboys/SpanForge"
+Documentation = "https://paulboys.github.io/SpanForge/"
+"Bug Tracker" = "https://github.com/paulboys/SpanForge/issues"
+Changelog = "https://github.com/paulboys/SpanForge/blob/main/CHANGELOG.md"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [tool.ruff]
 line-length = 100
 target-version = "py39"

@@ -1,23 +1,42 @@
 <View>
-  <Header value="Annotate Adverse Event Symptoms and Products"/>
+  <Style>
+    .htx-text {
+      font-size: 16px;
+      line-height: 1.8;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .htx-label[data-label="SYMPTOM"] {
+      background-color: #FF6B6B !important;
+      border-color: #C92A2A !important;
+    }
+    .htx-label[data-label="PRODUCT"] {
+      background-color: #4ECDC4 !important;
+      border-color: #0C8599 !important;
+    }
+  </Style>
   
-  <Text name="text" value="$text" granularity="word"/>
+  <Header value="Biomedical NER Annotation - Consumer Complaints" />
+  
+  <Text name="text" value="$text" granularity="word" highlightColor="#FFE066" />
   
   <Labels name="label" toName="text">
-    <Label value="SYMPTOM" background="#2ca02c" hotkey="s"/>
-    <Label value="PRODUCT" background="#1f77b4" hotkey="p"/>
+    <Label value="SYMPTOM" background="#FF6B6B" hotkey="s" />
+    <Label value="PRODUCT" background="#4ECDC4" hotkey="p" />
   </Labels>
   
   <!-- Optional: Enable for negation tracking -->
-  <!-- <Choices name="attributes" toName="text" perRegion="true">
-    <Choice value="negated" hint="Symptom is negated (e.g., 'no redness')"/>
-  </Choices> -->
+  <Choices name="attributes" toName="text" perRegion="true">
+    <Choice value="NEGATED" hint="Symptom is negated (e.g., 'no redness', 'without itching')"/>
+  </Choices>
   
-  <Style>
-    .lsf-main-content.lsf-requesting .lsf-main-content__wrapper {
-      pointer-events: none;
-      opacity: 0.8;
-    }
-  </Style>
+  <Header value="Instructions:" />
+  <View style="margin: 10px 0; padding: 10px; background-color: #F8F9FA; border-left: 4px solid #868E96;">
+    <Text value="• Select entity text by clicking word boundaries (drag to select multiple words)&#10;• Press 's' for SYMPTOM (red) or 'p' for PRODUCT (teal)&#10;• Include full clinical phrase (e.g., 'burning sensation', not just 'burning')&#10;• Exclude trailing punctuation unless part of the term&#10;• Annotate negated symptoms (e.g., 'no rash') - mark them and check NEGATED&#10;• Skip generic anatomy alone (e.g., 'face', 'skin') unless paired with symptom" />
+  </View>
+  
+  <Header value="Examples:" />
+  <View style="margin: 10px 0; padding: 10px; background-color: #E7F5FF; border-left: 4px solid #1C7ED6;">
+    <Text value="✓ CORRECT: 'burning sensation' (full phrase)&#10;✗ AVOID: 'burning' (incomplete)&#10;&#10;✓ CORRECT: 'redness and swelling' (annotate both separately)&#10;✗ AVOID: 'redness and' (includes conjunction)&#10;&#10;✓ CORRECT: 'facial cream' (product with anatomy context)&#10;✗ AVOID: 'face' alone (generic anatomy)" />
+  </View>
 </View>
 
