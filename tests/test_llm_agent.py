@@ -567,14 +567,14 @@ class TestLLMAPIInteractions:
 
         agent._client = mock_client
 
-        result = agent._call_anthropic_api("Test prompt for Anthropic")
+        result = agent._call_anthropic_api(mock_client, "Test prompt for Anthropic")
 
         # Verify API was called with correct parameters
         mock_client.messages.create.assert_called_once()
         call_kwargs = mock_client.messages.create.call_args[1]
         assert call_kwargs["model"] == "claude-3-sonnet-20240229"
         assert call_kwargs["temperature"] == 0.2
-        assert call_kwargs["max_tokens"] == 4096
+        assert call_kwargs["max_tokens"] == 2048
         assert "Test prompt for Anthropic" in str(call_kwargs["messages"])
 
     @patch("src.llm_agent.os.getenv")
