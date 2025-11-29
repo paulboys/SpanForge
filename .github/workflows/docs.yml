@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
   build-deploy:
@@ -37,18 +35,10 @@ jobs:
       - name: Build documentation
         run: mkdocs build --clean
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          path: ./site
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        id: deployment
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          force_orphan: true
+          full_commit_message: "Deploy docs: ${{ github.sha }}"
