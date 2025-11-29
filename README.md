@@ -8,7 +8,7 @@
 [![Test Suite](https://github.com/paulboys/SpanForge/actions/workflows/test.yml/badge.svg)](https://github.com/paulboys/SpanForge/actions/workflows/test.yml)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.5.0-green.svg)](https://github.com/paulboys/SpanForge/releases/tag/v0.5.0)
+[![Version](https://img.shields.io/github/v/release/paulboys/SpanForge?display_name=tag&color=green)](https://github.com/paulboys/SpanForge/releases/latest)
 
 </div>
 
@@ -207,4 +207,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Version**: 0.5.0 | **Status**: Annotation-Ready | **Updated**: November 28, 2025
+**Status**: Annotation-Ready | **Updated**: November 29, 2025
